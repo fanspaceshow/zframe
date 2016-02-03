@@ -1,0 +1,102 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>编辑角色</title>
+</head>
+  <body>
+  <script type="text/javascript">
+  		var winRoleEdit = new Windows("role_edit");
+  		var oRoleEdit = {
+  			initForm : function(){
+	 			winRoleEdit.find('#roleForm').form({   
+				    url:'$!basePath/admin/role/doEdit',   
+				    onSubmit: function(){
+				    	var pass = winRoleEdit.find('#roleForm').form("validate");
+				    	if(pass){
+				    		winRoleEdit.find("#ok").linkbutton("loading");
+				    	}
+				    	return pass; 
+				    },   
+				    success:function(data){
+				   		var result = jQuery.parseJSON(data);   
+				        if(result.success == true){
+				        	top.Notiy.success("修改成功!");
+			        		winRoleEdit.setReturnValue(true);
+							winRoleEdit.close();
+				        }else if(result.NoChanges){
+				        	top.Notiy.info("您未做任何修改!");
+				        	winRoleEdit.setReturnValue(false);
+							winRoleEdit.close();
+				        }else{
+				        	top.Dialog.alert("提示",result.error,"error");
+				        }
+				        winRoleEdit.find("#ok").linkbutton("reset");
+				    }
+				}); 
+	 		},
+	 		ok : function(){
+	 			winRoleEdit.find('#roleForm').submit();
+	 		},
+	 		cancel : function(){
+	 			winRoleEdit.close();
+	 		}
+  		};
+  		$(function(){
+			oRoleEdit.initForm();
+  		});
+	</script>
+    <div class="easyui-layout" data-options="fit:true">
+			<div data-options="region:'center',border:false">
+				<form id="roleForm" method="post" style="padding-top:10px;padding-left:20px;">
+				<input type="hidden" name="id" value="$!role.id"/>
+				<table width="90%">
+					<tr>
+						<td>名称：</td>
+						<td>
+						<input class="easyui-validatebox" type="text" name="name" value="$!role.name" maxlength="20" data-options="required:true,validType:'minLength[2]'" style="width: 90%;" #if(!$!isEditEnabled)disabled="disabled"#end/>  
+						</td>
+					</tr>
+					<tr>
+						<td>类型</td>
+						<td colspan="3">
+							<select class="easyui-combobox" name="type" data-options="editable:false,width:202" #if(!$!isEditEnabled)disabled="disabled"#end>
+								<option value="GENERAL">普通角色</option>
+								<option value="SYSTEM">系统角色</option>
+							</select>
+							#setSelectValue("role_edit","type","$!role.type")
+						</td>
+					</tr>
+					<tr>
+						<td>描述：</td>
+						<td colspan="3">
+							<textarea class="easyui-textarea" rows="3" style="width: 90%;" name="descript">$!role.descript</textarea>
+						</td>
+					</tr>
+					<tr>
+						<td>是否启用：</td>
+						<td colspan="3">
+							#if($!isEditEnabled)
+								<label>启用</label>
+								<input type="radio" name="enabled" value="0"/>
+								<label>不启用</label>
+								<input type="radio" name="enabled" value="1"/>
+							#setRadioValue("role_edit","enabled","$!role.enabled")
+							#else
+								<input type="hidden" name="enabled" value="0"/>
+								<span style="color:red">注:系统关键角色始终启用</span>
+							#end
+						</td>
+					</tr>
+				</table>
+				</form>
+			</div>
+			<div data-options="region:'south',border:false">
+				<div class="dialog-button">
+					<a id="ok" class="easyui-linkbutton" data-options="iconCls:'icon-ok'" href="javascript:void(0)" onclick="oRoleEdit.ok()">确定</a>
+					<a id="cancel" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" href="javascript:void(0)" onclick="oRoleEdit.cancel()">取消</a>
+				</div>
+			</div>
+		</div>
+  </body>
+</html>

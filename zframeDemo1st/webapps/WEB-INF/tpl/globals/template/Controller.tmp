@@ -1,0 +1,93 @@
+package org.zframework.web.controller;
+
+@Controller
+@RequestMapping("")
+public class #EntityNameController extends BaseController<#EntityName>{
+	@Autowired
+	private LogService logService;
+	@Autowired
+	private #EntityNameService #SingleEntityNameService;
+	
+	@RequestMapping(method={RequestMethod.GET})
+	public String index(){
+		//logService.recordInfo("查询#EntityName","成功",getCurrentUser().getLoginName() , getRequestAddr());
+		return "admin/#SingleEntityName/index";
+	}
+	/**
+	 * 列表
+	 * @param pageBean
+	 * @param name
+	 * @param value
+	 * @return
+	 */
+	@RequestMapping(value="/list",method=RequestMethod.POST)
+	@ResponseBody
+	public Map<String,Object> list(PageBean pageBean,String name,String value){
+		return list(pageBean, name, value, #SingleEntityNameService);
+	}
+	/**
+	 * 转向新增界面
+	 * @return
+	 */
+	@RequestMapping(value="/add",method={RequestMethod.GET})
+	public String toAdd(){
+		return "admin/#SingleEntityName/add";
+	}
+	/**
+	 * 执行新增
+	 * @return
+	 */
+	@RequestMapping(value="/doAdd",method={RequestMethod.POST})
+	@ResponseBody
+	public JSONObject doAdd(@Valid @ModelAttribute("#SingleEntityName")#EntityName #SingleEntityName,BindingResult result){
+		JSONObject jResult = new JSONObject();
+		if(result.hasErrors()){
+			//记录日志
+			//logService.recordInfo("新增#EntityName","失败(非法提交表单!)",getCurrentUser().getLoginName() , request.getRemoteAddr());
+			return WebResult.error("请按要求填写表单!");
+		}else{
+			
+		}
+		return jResult;
+	}
+	/**
+	 * 转向编辑界面
+	 * @return
+	 */
+	@RequestMapping(value="/edit/{id}",method={RequestMethod.GET})
+	public String toEdit(Model model,@PathVariable Integer id){
+		#EntityName #SingleEntityName = #SingleEntityNameService.getById(id);
+		if(ObjectUtil.isNotNull(btn)){
+			model.addAttribute("#SingleEntityName", #SingleEntityName);
+			return "admin/#SingleEntityName/edit";
+		}else{
+			return ControllerCommon.UNAUTHORIZED_ACCESS;
+		}
+	}
+	/**
+	 * 执行编辑
+	 * @return
+	 */
+	@RequestMapping(value="/doEdit",method={RequestMethod.POST})
+	@ResponseBody
+	public JSONObject doEdit(@Valid @ModelAttribute("#SingleEntityName")#EntityName #SingleEntityName,BindingResult result){
+		if(result.hasErrors()){
+			//logService.recordInfo("编辑#EntityName","失败(未按要求填写表单)", getCurrentUser().getLoginName(), request.getRemoteAddr());
+			return WebResult.error("请按要求填写表单!");
+		}else{
+			//数据库操作
+			return WebResult.successs();
+		}
+	}
+	/**
+	 * 执行删除
+	 * @param request
+	 * @param ids
+	 * @return
+	 */
+	@RequestMapping(value="/doDelete",method={RequestMethod.POST})
+	@ResponseBody
+	public JSONObject doDelete(@RequestParam Integer[] ids){
+		return #SingleEntityNameService.executeDelete(ids);
+	}
+}

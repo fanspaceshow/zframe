@@ -1,0 +1,27 @@
+package org.zframework.web.service;
+
+@Service
+public class #EntityNameService extends BaseService<#EntityName>{
+	/**
+	 * 执行删除操作
+	 * @param ids
+	 * @return
+	 */
+	public JSONObject executeDelete(Integer[] ids) {
+		JSONObject jResult = new JSONObject();
+		//记录日志
+		List<#EntityName> #SingleEntityNameList = getByIds(ids);
+		for(#EntityName #SingleEntityName : #SingleEntityNameList){
+			if(ObjectUtil.isNull(btn)){
+				jResult = WebResult.error("尝试删除不存在的#EntityName");
+				//logService.recordInfo("删除#EntityName","失败（尝试删除不存在的角色）",getCurrentUser().getLoginName() , getRequest().getRemoteAddr());
+				break;
+			}else{
+				delete(#SingleEntityName);
+				jResult = WebResult.success();
+				//logService.recordInfo("删除#EntityName","成功（ID:"+#SingleEntityName.getId(),getCurrentUser().getLoginName() , getRequest().getRemoteAddr());
+			}
+		}
+		return jResult;
+	}
+}

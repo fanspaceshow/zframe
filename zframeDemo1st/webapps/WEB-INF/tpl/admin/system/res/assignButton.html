@@ -1,0 +1,213 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>分配按钮</title>
+</head>
+ <body>
+ <script type="text/javascript">
+ 	var winAssignButton = new Windows("assign_button");
+ 	var oAssignButton = {
+ 		initForm : function(){
+ 			
+ 		},
+ 		initDataGrid : function(){
+	 		winAssignButton.find("#dgOptionalButtons").datagrid({
+	 				title:'可选按钮',
+	 				iconCls:'icon-button-add',
+	 				autoRowHeight: false,
+					url:'$!basePath/admin/button/btnListForResource',
+					border:true,
+					fit:true,
+					idField:'name',
+					animate:true,
+					singleSelect:false,
+					frozenColumns:[[
+		                {field:'ck',checkbox:true},
+					]],
+					columns:[[	
+						{field:'icon',title:'图标',width:40,formatter:function(value,row,index){
+							value = "<center><span style='padding-top:2px' class='"+value+"'\>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></center>"
+							return value;
+						}},		
+						{field:'name',title:'按钮名称',width:110,sortable:true
+							,formatter:function(value,row,index){
+								return highShowSearch(winAssignButton.find("#dgOptionalButtons"),"name",value);
+							}
+						}
+					]],
+					rownumbers:true,
+					toolbar:'#dgOptionalButtons-toolbar',
+					queryParams:{
+						isEq:false,
+						ids:'$!btnIds'
+					},
+					onDblClickRow:function(rowIndex,rowData){
+						var lDg = winAssignButton.find("#dgOptionalButtons");//左边表格
+	 					var rDg = winAssignButton.find("#dgSelectButtons");//右边表格
+	 					lDg.datagrid("deleteRow",rowIndex);
+	 					rDg.datagrid("appendRow",rowData);
+					}
+	 		});
+	 		winAssignButton.find("#dgSelectButtons").datagrid({
+	 				title:'已选按钮',
+	 				iconCls:'icon-button-edit',
+	 				autoRowHeight: false,
+					url:'$!basePath/admin/button/btnListForResource',
+					border:true,
+					fit:true,
+					idField:'name',
+					animate:true,
+					singleSelect:false,
+					frozenColumns:[[
+		                {field:'ck',checkbox:true},
+					]],
+					columns:[[
+						{field:'icon',title:'图标',width:40,formatter:function(value,row,index){
+							value = "<center><span style='padding-top:2px' class='"+value+"'\>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></center>"
+							return value;
+						}},		
+						{field:'name',title:'按钮名称',width:110,sortable:true
+							,formatter:function(value,row,index){
+								return highShowSearch(winAssignButton.find("#dgSelectButtons"),"name",value);
+							}
+						}
+					]],
+					rownumbers:true,
+					toolbar:'#dgSelectedButtons-toolbar',
+					queryParams:{
+						isEq:true,
+						ids:'$!btnIds'
+					},
+					onDblClickRow:function(rowIndex,rowData){
+						var lDg = winAssignButton.find("#dgOptionalButtons");//左边表格
+	 					var rDg = winAssignButton.find("#dgSelectButtons");//右边表格
+	 					rDg.datagrid("deleteRow",rowIndex);
+	 					lDg.datagrid("appendRow",rowData);
+					}
+	 		});
+ 		},
+ 		initSelectTool : function(){
+ 			//移除
+	 		winAssignButton.find("#btnLeft").click(function(){
+	 			var lDg = winAssignButton.find("#dgOptionalButtons");//左边表格
+	 			var rDg = winAssignButton.find("#dgSelectButtons");//右边表格
+	 			
+	 			var selectRows = rDg.datagrid("getSelections");
+	 			var rAllRows = rDg.datagrid("getRows");
+	 			var rRows = new Array();
+	 			if(selectRows.length>0){
+	 				$.each(selectRows,function(i,row){
+	 					lDg.datagrid("appendRow",row);
+	 				});
+	 				var unSelectedRows = DataGridUtil.getUnSelectedRows(rDg);
+	 				//移除所有的行
+	 				$.each(rAllRows,function(i,row){
+	 					rDg.datagrid("deleteRow",0);
+	 				});
+	 				//添加为选中的行
+	 				$.each(unSelectedRows,function(i,row){
+	 					rDg.datagrid("appendRow",row);
+	 				});
+	 				
+	 			}
+	 		});
+	 		//选中
+	 		winAssignButton.find("#btnRight").click(function(){
+	 			var lDg = winAssignButton.find("#dgOptionalButtons");//左边表格
+	 			var rDg = winAssignButton.find("#dgSelectButtons");//右边表格
+	 			var selectRows = lDg.datagrid("getSelections");
+	 			var rAllRows = lDg.datagrid("getRows");
+	 			if(selectRows.length>0){
+	 				$.each(selectRows,function(i,row){
+	 					rDg.datagrid("appendRow",row);
+	 				});
+	 				//获取未选中的行
+	 				var unSelectedRows = DataGridUtil.getUnSelectedRows(lDg);
+	 				//先移除所有行
+	 				$.each(rAllRows,function(i,row){
+	 					lDg.datagrid("deleteRow",0);
+	 				});
+	 				//添加未选中的行
+	 				$.each(unSelectedRows,function(i,row){
+	 					lDg.datagrid("appendRow",row);
+	 				});
+	 			}
+	 		});
+ 		},
+ 		ok : function(){
+ 			var ids = new Array();
+	  		var rDg = winAssignButton.find("#dgSelectButtons");//右边表格
+			var rows = rDg.datagrid("getRows");
+			$.each(rows,function(i,row){
+				ids.push(row.id);
+			});
+			var jq = winAssignButton.find("#ok");
+			jq.linkbutton("loading");
+			$.post("$!basePath/admin/res/doAssignButton",{resId:$!resId,btnIds:ids.toString()},function(data){
+				if(data.success == true){
+					top.Notiy.success("按钮分配成功!");
+					winAssignButton.setReturnValue(true);
+					winAssignButton.close();
+				}
+			},"json");
+ 		},
+ 		cancel : function(){
+ 			winAssignButton.close();
+ 		},
+ 		doSearch1 : function(v,n){
+ 			doDataGridSearch("dgOptionalButtons",n,v);
+ 		},
+ 		doSearch2 : function(v,n){
+ 			doDataGridSearch("dgSelectButtons",n,v);
+ 		}
+ 	};
+ 	$(function(){
+ 		oAssignButton.initDataGrid();
+ 		oAssignButton.initSelectTool();
+ 	});
+ </script>
+ <div class="easyui-layout" data-options="fit:true">
+ 	 <div data-options="region:'west',border:false" style="width:225px;padding:5px;">
+	 	<table id="dgOptionalButtons"></table>
+	 </div>
+	 <div data-options="region:'east',border:false" style="width:225px;padding:5px;">
+	 	<table id="dgSelectButtons"></table>
+	 	<input type="hidden" name="selectedButtonIds" value="$!btnIds"/>
+	 </div>
+	 <div data-options="region:'center',border:false" style="width:10px;padding:2px;padding-top:130px;">
+	 	<a id="btnLeft" title="取消选中" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-left',plain:true"></a>
+	 	<a id="btnRight" title="选中" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-right',plain:true"></a>
+	 </div>
+	 <div id="dgOptionalButtons-toolbar" class="datagrid-toolbar">
+		<table cellpadding="0" cellspacing="0" style="width:100%">
+			<tr>
+				<td style="text-align:right;padding-right:2px">
+					<input style="width:200px;" class="easyui-searchbox" data-options="searcher:oAssignButton.doSearch1,prompt:'请输入按钮名称',menu:'#assign_mm'"></input>
+					<div id="assign_mm" style="width:80px;">
+						<div data-options="name:'name'">按钮名称</div>
+					</div>
+				</td>
+			</tr>
+		</table>
+	</div>
+	<div id="dgSelectedButtons-toolbar" class="datagrid-toolbar">
+		<table cellpadding="0" cellspacing="0" style="width:100%">
+			<tr>
+				<td style="text-align:right;padding-right:2px">
+					<input style="width:200px;" class="easyui-searchbox" data-options="searcher:oAssignButton.doSearch2,prompt:'请输入按钮名称',menu:'#assign_mm'"></input>
+				</td>
+			</tr>
+		</table>
+	</div>
+	 <!--Change Button Text-->
+	 <div data-options="region:'south',border:false">
+	 	<div class="dialog-button">
+	 		<span style="color:red;float:left;">注:双击按钮即可添加和删除</span>	
+			<a id="ok" class="easyui-linkbutton" data-options="iconCls:'icon-ok'" href="javascript:void(0)" onclick="oAssignButton.ok()">确定</a>
+			<a id="cancel" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" href="javascript:void(0)" onclick="oAssignButton.cancel()">取消</a>
+		</div>
+	</div>
+ </div>
+  </body>
+</html>

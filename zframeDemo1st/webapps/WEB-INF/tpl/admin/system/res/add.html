@@ -1,0 +1,144 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>新增资源</title>
+</head>
+ <body>
+ <style>
+ 	table td{
+ 		padding-left:10px;
+ 	}
+ </style>
+ <script type="text/javascript">
+ 		var winResAdd = new Windows("res_add");
+ 		var oResAdd = {
+ 			winSelIcon : new Windows("SelIcon"),
+ 			initForm : function(){
+ 				winResAdd.find("#resForm").form({
+	 				url:'$!basePath/admin/res/doAdd',
+	 				onSubmit: function(){
+				    	var pass = winResAdd.find('#resForm').form("validate");
+				    	if(pass){
+				    		winResAdd.find("#ok").linkbutton("loading");
+				    	}
+				    	return pass; 
+				    },   
+				    success:function(data){
+				   		var result = jQuery.parseJSON(data);   
+				        if(result.success == true){
+				       		top.Notiy.success("添加成功!");
+			        		winResAdd.setReturnValue(true);
+							winResAdd.close();
+				        }else{
+				        	top.Dialog.alert("提示",result.error,"error");
+				        }
+				        winResAdd.find("#ok").linkbutton("reset");
+				    }
+	 			});
+	 		},
+	 		initWindows : function(){
+	 			oResAdd.winSelIcon.windows({
+	 				title:"选择图标",
+					width:300,
+					height:300,
+					modal:false,
+					closed:true,
+					maximizable:true,
+					iconCls:'icon-button',
+					href:"$!basePath/admin/res/selIcon",
+					onClose:function(){
+						var result = JSONObject.parseJSON(oResAdd.winSelIcon.getReturnValue());
+						if(result.success){
+							var oInput = winResAdd.find('#resForm').find('input[name=icon]');
+							oInput.val(result.iconCls);
+						}
+					}
+	 			});
+	 		},
+	 		ok : function(){
+	 			oResAdd.winSelIcon.close();
+	 			winResAdd.find('#resForm').submit();
+	 		},
+	 		cancel : function(){
+	 			oResAdd.winSelIcon.close();
+	 			winResAdd.close();
+	 		}
+ 		};
+ 		$(function(){
+ 			oResAdd.initForm();
+ 			oResAdd.initWindows();
+ 			winResAdd.find("#btnSelIcon").click(function(){
+ 				oResAdd.winSelIcon.open();
+ 			});
+ 		});
+ </script>
+ <div class="easyui-layout" data-options="fit:true">
+	 <div data-options="region:'center',border:false">
+		<form id="resForm" method="post" style="padding-top:10px;padding-left:15px;">
+			<table width="90%">
+				<tr>
+					<td>上级资源：</td>
+					<td>
+						<select id="parentRes" name="parentId" class="easyui-combotree" style="width: 193px;" data-options="url:'$!basePath/admin/res/resTree',animate:true,onSelect:function(node){
+							if(node.url){
+								winResAdd.find('#resForm').find('input[name=url]').val(node.url);
+							}
+						},onLoadSuccess:function(){
+							//初始化从index页面传来的参数
+				 			var param = winResAdd.getParam();
+				 			if(!param || param.length==0)
+				 				return;
+				 			var node = winResAdd.find('#parentRes').combotree('tree').tree('find',param);
+				 			if(node != undefined && node != null)
+				 				winResAdd.find('#parentRes').combotree('setValue',param);
+						}">
+							<option selected="selected" value="0">无上级资源</option>
+						</select>
+					</td>
+				</tr>
+				<tr>
+					<td>资源名称：</td>
+					<td>
+						<input type="text" class="easyui-validatebox" name="name" maxlength="50" data-options="required:true" style="width: 100%;"/>
+					</td>
+				</tr>
+				<tr>
+					<td>链接地址：</td>
+					<td>
+						<input type="text" class="easyui-validatebox" name="url" maxlength="100" data-options="required:true" style="width: 100%;"/>
+					</td>
+				</tr>
+				<tr>
+					<td>图标/样式：</td>
+					<td>
+						<input type="text" class="easyui-validatebox" name="icon" maxlength="20" data-options="required:true" style="width: 80%;vertical-align: middle;"/><a id="btnSelIcon" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-add',plain:true"></a>
+					</td>
+				</tr>
+				<tr>
+					<td>描述：</td>
+					<td>
+						<textarea class="easyui-textarea" class="easyui-textarea" rows="5" cols="21" name="descript" style="width: 100%;"></textarea>
+					</td>
+				</tr>
+				<tr>
+					<td>是否启用：</td>
+					<td>
+						<label>启用</label>
+						<input type="radio" name="enabled" value="0" checked="checked"/>
+						<label>不启用</label>
+						<input type="radio" name="enabled" value="1"/>
+					</td>
+				</tr>
+			</table>
+		</form>
+	 </div>
+	 <div data-options="region:'south',border:false">
+	 	<div class="dialog-button">
+			<a id="ok" class="easyui-linkbutton" data-options="iconCls:'icon-ok'" href="javascript:void(0)" onclick="oResAdd.ok()">确定</a>
+			<a id="cancel" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" href="javascript:void(0)" onclick="oResAdd.cancel()">取消</a>
+		</div>
+	</div>
+ </div>
+  </body>
+</html>

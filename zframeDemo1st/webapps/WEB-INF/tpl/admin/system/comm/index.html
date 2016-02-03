@@ -1,0 +1,203 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>系统参数首页</title>
+	#style
+</head>
+<body class="easyui-layout">
+	<script type="text/javascript">
+		var win_Add = new Windows("comm_add");
+		var win_Edit = new Windows("comm_edit");
+		$(function() {
+			initDataGrid();
+			initWindows();
+			initToolbar();
+		});
+		function initDataGrid(){
+			$('#dgCommList').datagrid({
+				autoRowHeight : false,
+				collapsible : true,
+				url : '$!basePath/admin/common/commList',
+				sortName : 'id',
+				sortOrder : 'asc',
+				remoteSort : true,
+				border : false,
+				fit : true,
+				idField : 'id',
+				frozenColumns:[[
+	                {field:'ck',checkbox:true},
+	                {title:'序号',field:'id',width:40,sortable:true}
+				]],
+				columns:[[
+					{
+						field : 'name',
+						title : '标识',
+						width : 120,
+						sortable : true,
+						formatter : function(value, row, index){
+							return highShowSearch($("#dgCommList"),"key", value);
+						}
+					},
+					{
+						field : 'value',
+						title : '值',
+						width : 120,
+						sortable : true,
+						formatter : function(value, row, index) {
+							return highShowSearch($("#dgCommList"),"value", value);
+						}
+					},
+					{
+						field:'type',
+						title:'类型',
+						width:120,
+						formatter:function(value,row,index){
+							if(value==1){
+								return "系统数据";
+							}else if(value==2){
+								return "关键数据";
+							}else if(value==3){
+								return "常规数据";
+							}else{
+								return "";
+							}
+						}
+					},
+					{
+						field : 'descrip',
+						title : '说明',
+						width : 250,
+						sortable : true,
+						formatter : function(value, row, index) {
+							return highShowSearch($("#dgCommList"),"descrip", value);
+						}
+					}
+					]],
+					pagination : true,
+					rownumbers : true,
+					toolbar : '#dgCommList-toolbar',
+					onRowContextMenu : function(e, rowindex, rowData) {
+						rowContentMenuShowHandler(e, rowindex, rowData,"dgCommList", "dgCommList_rowContextMenu");
+					}
+				});
+		}
+		function initWindows() {
+			win_Add.windows({
+				title : "新增系统参数",
+				width : 330,
+				height : 230,
+				modal : true,
+				cache : false,
+				closed : true,
+				iconCls : 'icon-assets-computer-add',
+				href : "$!basePath/admin/common/add",
+				onClose : function() {
+					if (win_Add.getReturnValue() == "true") {
+						$('#dgCommList').datagrid("reload");
+					}
+				}
+			});
+			win_Edit.windows({
+				title : "编辑系统参数",
+				width : 330,
+				height : 230,
+				modal : true,
+				cache : false,
+				closed : true,
+				iconCls : 'icon-assets-computer-edit',
+				href : "$!basePath/admin/common/edit",
+				onClose : function() {
+					if (win_Edit.getReturnValue() == "true") {
+						$('#dgCommList').datagrid("reload");
+					}
+				}
+			});
+		}
+
+		function rowContentMenuClickHandler(item) {
+			ContentMenuClickHandler("dgCommList", item);
+		}
+		function initToolbar() {
+			$("#btnAdd").click(function() {
+				win_Add.open();
+			});
+			$("#btnEdit").click(function(id) {
+					var selectRows = $("#dgCommList").datagrid("getSelected");
+					if(!selectRows){
+						top.Notiy.warning("请选择要编辑的项");
+					}else{
+							$.ajax({
+  							type: 'POST',
+  							url: "$!basePath/admin/common/getTypeById/"+selectRows.id,
+  							success: function(data){
+  				 			var result = jQuery.parseJSON(data);  				 
+			   				if(result.isType){
+			   					top.Notiy.warning("系统数据不允许修改");
+			   				}else{
+			   					win_Edit.windows({href:"$!basePath/admin/common/edit/"+selectRows.id});
+								win_Edit.windows("open");
+			   			 	}
+  						}
+					});
+				}
+			});
+			$("#btnRemove").attr("deleteUrl","$!basePath/admin/common/doDelete");
+			$("#btnRemove").click(function() {
+				DataGridUtil.Delete("$!basePath/admin/common/doDelete","dgCommList");
+			});
+		}
+		//右键菜单中修改的触发事件
+		function doEditForContentMenu_btnEdit(id){
+			$.ajax({
+  			type: 'POST',
+  			url: "$!basePath/admin/common/getTypeById/"+id,
+  			success: function(data){
+  				 var result = jQuery.parseJSON(data);
+  				 
+			   		if(result.isType){
+			   			top.Notiy.warning("系统数据不允许修改");
+			   		}else{
+			   			win_Edit.windows({href:"$!basePath/admin/common/edit/"+id});
+						win_Edit.windows("open");
+			   		}
+  				}
+			});
+			
+		}
+		function doSearch(v, n) {
+			doDataGridSearch("dgCommList", n, v);
+		}
+	</script>
+	<div data-options="region:'center',border:true">
+		<table id="dgCommList"></table>
+	</div>
+	<!--Tools And ContextMenu-->
+	<div id="dgCommList-toolbar" style="padding:2px 0;"
+		class="datagrid-toolbar">
+		<table cellpadding="0" cellspacing="0" style="width:100%">
+			<tr>
+				<td style="padding-left:2px"><a id="btnAdd" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-assets-computer-add',plain:true" style="float: left;">新增</a>
+					<a id="btnEdit" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-assets-computer-edit',plain:true" style="float: left;">修改</a>
+					 <a id="btnRemove" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-assets-computer-delete',plain:true" style="float: left;">删除</a>
+				</td>
+				<td style="text-align:right;padding-right:2px">
+					<input id="ss" style="width:240px;" class="easyui-searchbox" data-options="searcher:doSearch,prompt:'请输入查询内容',menu:'#ss_mm'"></input>
+					<div id="ss_mm" style="width:80px;">
+						<div data-options="name:'id'">id</div>
+						<div data-options="name:'key'">标识</div>
+						<div data-options="name:'value'">值</div>
+					</div>
+				</td>
+			</tr>
+		</table>
+	</div>
+	<!-- 右键菜单 -->
+	<div id="dgCommList_rowContextMenu" data-options="onClick:rowContentMenuClickHandler" class="easyui-menu" style="width:120px;">
+		<div name="select" data-options="iconCls:'icon-ok'">选中</div>
+		<div name="edit" data-options="iconCls:'icon-datadict-edit'" with="btnEdit">修改</div>
+		<div name="remove" data-options="iconCls:'icon-datadict-delete'" with="btnRemove">删除此参数</div>
+		<div name="removeSelected" data-options="iconCls:'icon-datadict-delete'" with="btnRemove">删除已选中参数</div>
+	</div>
+</body>
+</html>

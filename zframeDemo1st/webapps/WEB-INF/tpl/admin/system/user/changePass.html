@@ -1,0 +1,77 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>新增用户</title>
+</head>
+  <body>
+  <script type="text/javascript">
+  		var winChangePass = new Windows("win_changePass");
+  		var oChangePass = {
+  			initForm : function(){
+	 			winChangePass.find('#changePassForm').form({   
+				    url:'$!basePath/admin/user/doChangePass',   
+				    onSubmit: function(){
+				    	var pass = winChangePass.find('#changePassForm').form("validate");
+				    	if(pass){
+				    		winChangePass.find("#ok").linkbutton("loading");
+				    	}
+				    	return pass; 
+				    },   
+				    success:function(data){
+				   		var result = jQuery.parseJSON(data);   
+				        if(result.success){
+				        	top.Notiy.success("密码变更成功!");
+			        		winChangePass.setReturnValue(true);
+							winChangePass.close();
+				        }else if(result.NoChanges){
+				        	top.Notiy.warning("新密码与原始密码相同，修改未生效!");
+				        	winChangePass.close();
+				        }else{
+				        	top.Dialog.alert("错误",result.error,"error");
+				        }
+				        winChangePass.find("#ok").linkbutton("reset");
+				    }
+				}); 
+	 		},
+	 		ok : function(){
+	 			winChangePass.find('#changePassForm').submit();
+	 		},
+	 		cancel : function(){
+	 			winChangePass.close();
+	 		}
+  		};
+  		$(function(){
+  			oChangePass.initForm();
+  		});
+	</script>
+    <div class="easyui-layout" data-options="fit:true">
+			<div data-options="region:'center',border:false">
+				<form id="changePassForm" method="post" style="padding-top:10px;padding-left:20px;">
+					<table width="90%">
+						<tr>
+							<td>新密码：</td>
+							<td>
+							<input id="pwd" class="easyui-validatebox" type="password" name="passWord" maxlength="20" required="true" data-options="validType:'minLength[6]'" />  
+							</td>
+							</tr>
+							<tr>
+							<td>
+								确认新密码：
+							</td>
+							<td>
+								<input id="rpwd" class="easyui-validatebox" type="password" name="rPassWord" maxlength="20" required="true" validType="equals['#pwd']"/>
+							</td>
+						</tr>
+					</table>
+				</form>
+			</div>
+			<div data-options="region:'south',border:false">
+				<div class="dialog-button">
+					<a id="ok" class="easyui-linkbutton" data-options="iconCls:'icon-ok'" href="javascript:void(0)" onclick="oChangePass.ok()">确定</a>
+					<a id="cancel" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" href="javascript:void(0)" onclick="oChangePass.cancel()">取消</a>
+				</div>
+			</div>
+		</div>
+  </body>
+</html>

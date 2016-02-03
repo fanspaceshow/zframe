@@ -1,0 +1,285 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>index.html</title>
+	#style
+	<script type="text/javascript" src="$!basePath/framework/js/core/plugin/util/Base64Util.js"></script>
+</head>
+ <body class="easyui-layout">
+ <script type="text/javascript">
+ 	var winDbAddTable = new Windows("win_db_add_table");
+ 	var winDbEntity = new Windows("win_db_entity");
+	$(function(){
+	     initWindows();
+	     initToolbar();
+	});
+	var schemas = {};
+	var dgSQLResult = undefined;
+	var dgTables = undefined;
+	function initDataGrid(index){
+		switch(index){
+			case 0:
+				if(dgTables)return;
+				$("#dgTables").datagrid({
+					autoRowHeight: false,
+					collapsible:true,
+					border:true,
+					fit:true,
+					idField:'table_name',
+					url:"$!basePath/admin/database/table/list",
+					frozenColumns:[[
+			                {field:'ck',checkbox:true},
+						]],
+					columns:[[
+						{field:'table_schema',title:'Schema',width:200},
+						{field:'table_name',title:'表名',width:200},
+						{field:'create_time',title:'创建时间',width:200},
+						{field:'op',title:'操作',width:150,formatter:function(value,row,index){
+							var v = "<a href=\"javascript:;\" onClick=\"db_query('"+row.table_name+"')\">查询数据</a>";
+							v += "&nbsp;&nbsp;<a href=\"javascript:;\" onClick=\"db_ref('"+row.table_name+"')\">逆向工程</a>";
+							return v;
+						}}
+					]],
+					toolbar:'#dgTables-toolbar',
+					rownumbers:true,
+					pagination:true,
+					pageSize:20
+				});
+				dgTables = $("#dgTables");
+			break;
+			case 1:
+				if(dgSQLResult)return;
+				$('#dgSQLResult').datagrid({
+					autoRowHeight: false,
+					collapsible:true,
+					border:true,
+					fit:true,
+					idField:'id',
+					singleSelect:true,
+					frozenColumns:[[
+		                {title:'序号',field:'id',width:50}
+					]],
+					columns:[[
+						{field:'result',title:'结果',width:200}
+					]]
+				});
+				dgSQLResult = $('#dgSQLResult');
+			break;
+		}
+	}
+	function initWindows(){
+		winDbAddTable.windows({
+			title:"创建新表",
+			width:800,
+			height:550,
+			modal:true,
+			closed:true,
+			iconCls:'icon-application-add',
+			href:"$!basePath/admin/database/addTable",
+			onClose:function(){
+				if(winDbAddTable.getReturnValue()=="true"){
+					$('#dgTables').datagrid("reload");
+				}
+			}
+		});
+		winDbEntity.windows({
+			width:800,
+			height:550,
+			modal:true,
+			closed:true,
+			iconCls:'icon-application-go'
+		});
+	}
+	function db_ref(table_name){
+		winDbEntity.windows({title:"逆向工程 - "+table_name,href:"$!basePath/admin/database/refEntity/"+table_name});
+		winDbEntity.open();
+	}
+	function db_query(table_name){
+		$("#dbTabs").tabs("select",1);
+		$("#divSQLEditor").find("#txtSQL").val("SELECT * FROM "+table_name);
+		$("#btnExecute").click();
+	}
+	function initToolbar(){
+		$("#btnExecute").click(function(showPg){
+			var sql = jQuery.trim($("#txtSQL").val());
+			if(sql.length>0){
+				$("#btnExecute").linkbutton({iconCls:'icon-loading'});
+				jQuery.post("$!basePath/admin/database/sql",{sql:Base64Util.encode(sql)},function(data){
+					$("#btnExecute").linkbutton({iconCls:'icon-ok'});
+					if(data.length == 0){
+						top.Notiy.warning("无返回结果!");
+						return;
+					}
+					if(data[0].type == "error"){//sql执行错误
+						top.Dialog.error("SQL异常:"+data[0].msg);
+					}else if(data[0].type == "notQuery"){
+						var result = data[0];
+						var dg = $('#dgSQLResult');
+						dg.datagrid({frozenColumns:[[
+						                {title:'序号',field:'id',width:100}
+									]],
+									columns:[[
+										{field:'result',title:'结果',width:200}
+									]]});
+						dg.datagrid("loadData",[{id:result.id,result:result.result}])
+					}else if(data[0].type == "empty"){
+						var dg = $('#dgSQLResult');
+						dg.datagrid({frozenColumns:[],
+									columns:[[
+										{field:'result',title:'结果',width:200}
+									]]});
+						dg.datagrid("loadData",[{result:"无结果"}])
+					}else if(data[0].type == "size"){
+						top.Notiy.warning("为了系统稳定，单次查询数据最多50条！（建议使用分页）");
+					}
+					else{
+						var dg = $('#dgSQLResult');
+						var cols = data[0].cols;
+						var width = dg.parent().width()/cols.length;
+						var columns = [];
+						for(var i=0;i<cols.length;i++){
+							var c = cols[i];
+							if(c.toLowerCase() == "count(*)")
+								columns.push({field:c,title:'总数',width:width});
+							else
+								columns.push({field:c,title:c,width:width});
+						}
+						
+						dg.datagrid({frozenColumns:[],
+									columns:[columns]});
+						dg.datagrid("loadData",data[0].data)
+					}
+				},"json");
+			}else{
+				top.Notiy.warning("请输入SQL语句后再点击执行！");
+			}
+		});
+		$("#btnOraclePage").click(function(){
+			var sql = jQuery.trim($("#txtSQL").val());
+			if(sql.length>0){
+				sql = "select * from ("+sql+") where rownum<=50";
+				$("#txtSQL").val(sql);
+			}else{
+				top.Notiy.warning("请输入SQL语句后再点击执行！");
+			}
+			$("#txtSQL").focus()
+		});
+		$("#btnMysqlPage").click(function(){
+			var sql = jQuery.trim($("#txtSQL").val());
+			if(sql.length>0){
+				sql = "select * from ("+sql+") limit 0,50";
+				$("#txtSQL").val(sql);
+			}else{
+				top.Notiy.warning("请输入SQL语句后再点击执行！");
+			}
+			$("#txtSQL").focus()
+		});
+		$("#btnClear").click(function(){
+			$("#txtSQL").val("");
+			$("#txtSQL").focus()
+		});
+		$("#btnTableAdd").click(function(){
+			winDbAddTable.open();
+		});
+		$("#btnTableRemove").click(function(){
+			var dg = $("#dgTables");
+			var rows = dg.datagrid("getSelections");
+			if(rows.length==0){
+				top.Notiy.warning("请选择要删除的表!");
+				return;
+			}
+			top.Dialog.confirm("确定删除选中的表吗?",function(v){
+				if(v){
+					top.Dialog.prompt("提示","请输入超级管理员用户密码:",function(val){
+						if(val){
+							var tableNames = new Array();
+							for(var i=0;i<rows.length;i++){
+								tableNames.push(rows[i].table_name);
+							}
+							jQuery.post("$!basePath/admin/database/doDropTable",{superpass:val,tableNames:tableNames.toString()},function(data){
+								if(data.success == true){
+									top.Notiy.success("删除成功!");
+									dg.datagrid("reload");
+								}else{
+									top.Dialog.error(data.error);
+								}
+							},"json");
+						}
+					},"password");
+				}
+			});
+			
+		});
+	}
+	function doSearch(v,n){
+		doDataGridSearch("dgTables",n,v);
+	}
+	function sqlHotKey(){
+		if(event.ctrlKey && (event.keyCode == 13 || event.keyCode == 17)){
+			$("#btnExecute").click();
+		}
+	}
+ </script>
+    <div id="div1" data-options="region:'center',border:true">
+	    	<div id="dbTabs" class="easyui-tabs" data-options="fit:true,border:false,onSelect:function(title,index){
+	    		initDataGrid(index);
+	    	}"> 
+	    	<div title="数据库表" data-options="" style="padding:1px;">  
+		        <table id="dgTables"></table>
+		        <!-- 工具条 -->
+			    <div id="dgTables-toolbar" style="padding:2px 0;" class="datagrid-toolbar">
+					<table cellpadding="0" cellspacing="0" style="width:100%">
+						<tr>
+							<td style="padding-left:2px">
+								<a id="btnTableAdd" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-application-add',plain:true" style="float: left;">建立新表</a>
+								<!-- <a id="btnTableEdit" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-application-edit',plain:true" style="float: left;">修改表结构</a> -->
+								<a id="btnTableRemove" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-application-delete',plain:true" style="float: left;">删除表</a>
+								<div class="datagrid-btn-separator"></div>
+								<span style="color:red;vertical-align: middle;">*暂时只支持Mysql和Oracle数据库</span>
+							</td>
+							<td style="text-align:right;padding-right:2px">
+								<input id="dgTables_ss" style="width:240px;" class="easyui-searchbox" data-options="searcher:doSearch,prompt:'请输入查询内容',menu:'#dgTables_ss_mm'"></input>
+								<div id="dgTables_ss_mm" style="width:80px;">
+									<div data-options="name:'tableName'">表名</div>
+								</div>
+							</td>
+						</tr>
+					</table>
+				</div>
+		    </div>
+		    <div id="divSQLEditor" title="SQL编辑器">
+		        <div class="easyui-layout" data-options="fit:true"> 
+		        	<div data-options="region:'north',border:false,height:90" style="border-top:0px;">
+		        		<center>
+			        		<table width="80%">
+			        			<tr>
+			        				<td width="5%">SQL:</td>
+			        				<td width="70%">
+			        					<textarea id="txtSQL" class="easyui-textarea" rows="5" style="width:98%" onkeyup="sqlHotKey()"></textarea>
+			        				</td>
+			        				<td width="12%">
+			        					<a id="btnOraclePage" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-application-double',plain:true">Oracle分页</a><br/>
+			        					<a id="btnMysqlPage" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-application-double',plain:true">MySql分页</a><br/>
+			        				</td>
+			        				<td>
+			        					<a id="btnExecute" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-tick',plain:true">执行</a><br/>
+			        					<a id="btnClear" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-cancel',plain:true">清空</a>
+			        				</td>
+			        			</tr>
+			        		</table>
+		        		</center>
+		        	</div>
+		        	<div data-options="region:'center',border:true,title:'结果',iconCls:'icon-application-xp-terminal'" style="padding:1px;border-width:1px 0px 0px 0px;">
+		        		<table id="dgSQLResult"></table>
+		        	</div>
+		        </div>
+		    </div>
+		    <div title="备份" data-options="">  
+		        <table id="dgBack"></table>
+		    </div>
+		</div>
+    </div>
+    <!--Tools And ContextMenu-->
+  </body>
+</html>

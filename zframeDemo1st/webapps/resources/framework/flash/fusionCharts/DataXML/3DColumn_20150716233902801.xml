@@ -1,0 +1,35 @@
+<chart  animation = '1'  showNames = '1'  rotateNames = '0'  showValues = '1'  showLimits = '1'  caption = '功能模块访问量分析'  xAxisName = '功能模块'  yAxisName = '访问次数'  canvasBgAlpha = '0'  shadowAlpha = '0'  showDivLinues = '1'  showAlternateVGridColor = '0'  formatNumberScale = '0'  formatNumber = '1'  decimalSeparator = '.'  thousandSeparator = ','  showHoverCap = '1'  hoverCapSepChar = ','  anchorRadius = '-1.0' >	<set label='SYSTEM' value='119'/>
+	<set label='Servlet错误' value='913'/>
+	<set label='分配按钮' value='5'/>
+	<set label='删除按钮' value='6'/>
+	<set label='删除用户' value='31'/>
+	<set label='删除角色' value='1'/>
+	<set label='删除资源' value='4'/>
+	<set label='增加数据字典' value='8'/>
+	<set label='数据字典' value='210'/>
+	<set label='数据库管理-执行SQL' value='173'/>
+	<set label='新增按钮' value='6'/>
+	<set label='新增数据字典' value='1'/>
+	<set label='新增机构' value='1'/>
+	<set label='新增用户' value='2'/>
+	<set label='新增资源' value='13'/>
+	<set label='查询安全管理' value='76'/>
+	<set label='查询安全管理IP配置' value='81'/>
+	<set label='查询操作按钮' value='147'/>
+	<set label='查询数据库管理' value='729'/>
+	<set label='查询日志' value='295'/>
+	<set label='查询机构' value='180'/>
+	<set label='查询用户' value='1714'/>
+	<set label='查询角色' value='439'/>
+	<set label='查询资源' value='523'/>
+	<set label='登录' value='1'/>
+	<set label='登陆系统' value='195'/>
+	<set label='编辑数据字典' value='10'/>
+	<set label='编辑机构' value='11'/>
+	<set label='编辑用户' value='18'/>
+	<set label='编辑资源' value='12'/>
+	<set label='角色分配资源' value='6'/>
+	<set label='资源排序' value='19'/>
+	<set label='退出系统' value='119'/>
+	<set label='首页 - 生活方式' value='156'/>
+</chart>
