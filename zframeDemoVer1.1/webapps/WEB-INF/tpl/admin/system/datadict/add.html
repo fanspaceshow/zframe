@@ -1,0 +1,202 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>add.html</title>
+</head>
+ <body>
+ <script type="text/javascript">
+ 	var winDataDictAdd = new Windows("win_datadict_add");
+ 	var oDataDictAdd = {
+ 		initForm : function(){
+ 			winDataDictAdd.find("#DataDictAddForm").form({
+	 			url:'$!basePath/admin/datadict/doAdd',
+	 			onSubmit: function(){
+			    	var pass = winDataDictAdd.find('#DataDictAddForm').form("validate");
+			    	if(pass){
+			    		var data = oDataDictAdd.getData();
+			    		if(data.length==0){
+			    			top.Notiy.warning("至少有一条有效数据!");
+			    			return false;
+			    		}
+			    		winDataDictAdd.find("#data").val(data);
+			    		winDataDictAdd.find("#ok").linkbutton("loading");
+			    	}
+			    	return pass; 
+			    },
+			    success:function(data){
+			   		var result = jQuery.parseJSON(data);   
+			        if(result.success == true){
+			       		top.Notiy.success("新增成功!");
+		        		winDataDictAdd.setReturnValue(true);
+						winDataDictAdd.close();
+			        }else{
+			        	top.Dialog.alert("错误",result.error,"error");
+			        }
+			        winDataDictAdd.find("#ok").linkbutton("reset");
+			    }
+	 		});
+ 		},
+ 		tr_lst : "<tr><td width='8%'>值{n}:</td><td><input class=\"easyui-validatebox\" type=\"text\" name=\"val\" maxlength=\"100\" style=\"width:95%\"/></td></tr>",
+ 		tr_map : "<tr><td width='8%'>键{n}:</td><td width='42%'><input class=\"easyui-validatebox\" type=\"text\" name=\"key\" maxlength=\"100\" style=\"width:95%\"/></td><td width='8%'>值{n}:</td><td width='42%'><input class=\"easyui-validatebox\" type=\"text\" name=\"val\" maxlength=\"100\" data-options=\"required:true\" style=\"width:95%\"/></td></tr>",
+ 		initDataGrid:function(type){
+	 		var tbData = winDataDictAdd.find("#tbDatas");
+	 		switch(type){
+	 			case "VALUE":
+	 				tbData.html("");
+	 				for(var i=0;i<1;i++){
+	 					tbData.append("<tr><td width='5%'>值:</td><td><input class=\"easyui-validatebox\" type=\"text\" name=\"val\" maxlength=\"100\" style=\"width:95%\"/></td></tr>");
+	 				}
+	 				winDataDictAdd.find("#toolbars").hide();
+	 			break;
+	 			case "LIST":
+	 				tbData.html("");
+	 				for(var i=0;i<8;i++){
+	 					tbData.append(oDataDictAdd.tr_lst.replace("{n}",i+1));
+	 				}
+	 				winDataDictAdd.find("#toolbars").show();
+	 			break;
+	 			case "MAP":
+	 				tbData.html("");
+	 				for(var i=0;i<8;i++){
+	 					tbData.append(oDataDictAdd.tr_map.replaceAll("{n}",i+1));
+	 				}
+	 				winDataDictAdd.find("#toolbars").show();
+	 			break;
+	 		}
+ 		},
+ 		initToolbar:function(){
+	 		winDataDictAdd.find("#btnAdd").click(function(){
+	 			var val = winDataDictAdd.find("#dataType").combobox("getValue");
+	 			var tbData = winDataDictAdd.find("#tbDatas");
+	 			if(val == "LIST"){
+	 				tbData.append(oDataDictAdd.tr_lst.replace("{n}",tbData.find("tr").length+1));
+	 			}else if(val == "MAP"){
+	 				tbData.append(oDataDictAdd.tr_map.replaceAll("{n}",tbData.find("tr").length+1));
+	 			}
+	 		});
+	 		winDataDictAdd.find("#btnRemove").click(function(){
+	 			var val = winDataDictAdd.find("#dataType").combobox("getValue");
+	 			var tbData = winDataDictAdd.find("#tbDatas");
+	 			if(val == "LIST" || val == "MAP"){
+	 				var tr = tbData.find("tr");
+	 				if(tr.length>1){
+	 					$(tbData.find("td:contains('值"+tr.length+"')").parent()).remove();
+	 				}else{
+	 					top.Notiy.warning("至少需要一条数据!");
+	 				}
+	 			}
+	 		});
+ 		},
+ 		getData : function(){
+ 			var val = winDataDictAdd.find("#dataType").combobox("getValue");
+ 			var tbData = winDataDictAdd.find("#tbDatas");
+ 			var data = new Array();
+ 			if(val == "MAP"){
+ 				var trs = tbData.find("tr");
+ 				for(var i=0;i<trs.length;i++){
+ 					var tr = $(trs[i]);
+ 					var d = new JSONObject();
+ 					
+ 					var key = tr.find("input[name='key']:text").val();
+ 					var val = tr.find("input[name='val']:text").val();
+ 					if(key.length>0){
+ 						d.put("k", key);
+ 						d.put("v",val);
+ 						data.push(d.toString());
+ 					}
+ 				}
+ 			}else{
+ 				var trs = tbData.find("tr");
+ 				for(var i=0;i<trs.length;i++){
+ 					var tr = $(trs[i]);
+ 					var d = new JSONObject();
+ 					var val = tr.find("input[name='val']:text").val();
+ 					if(val.length>0){
+ 						data.push(val);
+ 					}
+ 				}
+ 			}
+ 			return data;
+ 		},
+ 		ok : function(){
+ 			winDataDictAdd.find('#DataDictAddForm').submit();
+ 		},
+ 		cancel : function(){
+ 			winDataDictAdd.close();
+ 		}
+ 	};
+ 	$(function(){
+ 		oDataDictAdd.initForm();
+ 		oDataDictAdd.initToolbar();
+ 		oDataDictAdd.initDataGrid("VALUE");
+ 	});
+ </script>
+ <div class="easyui-layout" data-options="fit:true">
+	 <div data-options="region:'center',border:false">
+	 	<form id="DataDictAddForm" method="post" style="padding-top:10px;padding-left:20px;">
+	 		<input type="hidden" id="data" name="data" />
+	 		<table width="90%" style="line-height: 25px;">
+	 			<tr>
+					<td width="20%">数据名称:</td>
+					<td>
+						<select id="name" class="easyui-combobox" name="name" data-options="required:true,valueField:'id',url:'$!basePath/admin/datadicttype/list',onLoadSuccess:function(){
+							var param = winDataDictAdd.getParam();
+							if(param.length>0){
+								param = JSONObject.parseJSON(param);
+								if(param.type == 'id'){
+									$(this).combobox('select',param.val);
+								}else{
+									winDataDictAdd.find('#dataType').combobox('select',param.val);
+								}
+							}
+						}" style="width:200px;">   
+						    
+						</select>
+					</td>
+				</tr>
+				<tr>
+					<td width="20%">数据类型:</td>
+					<td>
+						<select id="dataType" class="easyui-combobox" name="dataType" data-options="editable:false,onSelect:function(row){
+							oDataDictAdd.initDataGrid(row.value);
+						}" style="width:200px;">   
+						    <option value="VALUE">VALUE(单值)</option>
+						    <option value="LIST">LIST(集合)</option>
+						    <option value="MAP">MAP(键/值)</option>
+						</select>
+					</td>
+				</tr>
+				<tr>
+					<td width="20%">描述：</td>
+					<td><input id="descript" class="easyui-validatebox" type="text" data-options="required:true" name="descript" style="width:100%"/></td>
+				</tr>
+				<tr>
+					<td colspan="2">
+						<fieldset style="border:solid 1px #ccc;width:100%;">
+							<legend>数据项</legend>
+							<table id="tbDatas" width="100%">
+								
+							</table>
+						</fieldset>
+					</td>
+				</tr>
+				<tr>
+					<td id="toolbars" colspan="2" style="align:left">
+						<a id="btnAdd" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-add',plain:true"></a>
+						<a id="btnRemove" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-remove',plain:true"></a>
+					</td>
+				</tr>
+			</table>
+		</form>
+	 </div>
+	 <!--Change Button Text-->
+	 <div data-options="region:'south',border:false">
+	 	<div class="dialog-button">
+			<a id="ok" class="easyui-linkbutton" data-options="iconCls:'icon-ok'" href="javascript:void(0)" onclick="oDataDictAdd.ok()">确定</a>
+			<a id="cancel" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" href="javascript:void(0)" onclick="oDataDictAdd.cancel()">取消</a>
+		</div>
+	</div>
+ </div>
+  </body>
+</html>

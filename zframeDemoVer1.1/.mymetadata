@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project-module
+  type="WEB"
+  name="zframe"
+  id="myeclipse.1394309675012"
+  context-root="/zframe"
+  j2ee-spec="6.0"
+  archive="zframe.war">
+  <attributes>
+    <attribute name="webrootdir" value="webapps" />
+  </attributes>
+</project-module>
+

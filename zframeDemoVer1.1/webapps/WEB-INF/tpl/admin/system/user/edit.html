@@ -1,0 +1,245 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>编辑用户</title>
+</head>
+  <body>
+  <script type="text/javascript">
+  		var winUserEdit = new Windows("user_edit");
+  		var winRoleList_edit = new Windows("user_role_list");
+  		var winUnitList_edit = new Windows("user_unit");
+  		
+  		var oUserEdit = {
+  			initForm : function(){
+ 				winUserEdit.find('#userForm').form({   
+				    url:'$!basePath/admin/user/doEdit',   
+				    onSubmit: function(){
+				    	var pass = winUserEdit.find("#userForm").form("validate");
+				    	if(pass){
+				    		$("#ok").linkbutton("loading");
+				    	}
+				    	return pass; 
+				    },   
+				    success:function(data){
+				   		var result = jQuery.parseJSON(data);   
+				        if(result.success == true){
+				        	top.Notiy.success("修改成功!");
+			        		winUserEdit.setReturnValue(true);
+							winUserEdit.close();
+				        }else if(result.NoChanges){
+				        	top.Notiy.success("您未做任何修改!");
+			        		winUserEdit.setReturnValue(false);
+							winUserEdit.close();
+				        }else{
+				        	top.Dialog.alert("错误",result.error,"error");
+				        }
+				        $("#ok").linkbutton("reset");
+				    }
+				}); 
+	 		},
+	 		initWindows : function(){
+	 			winRoleList_edit.windows({
+	  				title:"选择角色",
+					width:450,
+					height:350,
+					modal:true,
+					closed:true,
+					iconCls:'icon-user-add',
+					href:"$!basePath/admin/user/role",
+					onClose:function(){
+						var returnValue = winRoleList_edit.getReturnValue();
+						if(returnValue!="false"){
+							returnValue = JSONObject.parseJSON(returnValue);
+							winUserEdit.find("#userRoles").val(returnValue.ids);
+							winUserEdit.find("#userRoles_Tip").text("已选择:"+returnValue.names);
+						}else{
+							winUserEdit.find("#userRoles").val("");
+							winUserEdit.find("#userRoles_Tip").text("默认为普通角色");
+						}
+					}
+	  			});
+	  			winUnitList_edit.windows({
+	  				title:"选择部门",
+					width:250,
+					height:350,
+					modal:true,
+					closed:true,
+					iconCls:'icon-unit-add',
+					href:"$!basePath/admin/user/unit",
+					onClose:function(){
+						var returnValue = winUnitList_edit.getReturnValue();
+						if(returnValue != "default" && returnValue!="false"){//判断是否使用的默认部门
+							var selectUnit = JSONObject.parseJSON(returnValue);
+							winUserEdit.find("#userUnits").val(selectUnit.id);
+							winUserEdit.find("#userUnits_Tip").text("已选择:["+selectUnit.name+"]");
+							winUserEdit.find("#userUnits_Tip").css("fontWeight","bold");
+						}else if(returnValue!="false"){
+							winUserEdit.find("#userUnits").val("");
+							winUserEdit.find("#userUnits_Tip").text("默认为$!defaultUnit");
+							winUserEdit.find("#userUnits_Tip").css("fontWeight","normal");
+						}
+					}
+	  			});
+	 		},
+	 		initToolbar : function(){
+	 			winUserEdit.find("#btnRoleList").click(function(){
+	  				var selectRoles = winUserEdit.find("#userRoles").val();
+	  				if(selectRoles){
+	  					winRoleList_edit.setParam(selectRoles);
+	  				}
+	  				winRoleList_edit.windows("open");
+	  			});
+	  			winUserEdit.find("#btnUnitList").click(function(){
+	  				var selectUnits = winUserEdit.find("#userUnits").val();
+	  				if(selectUnits){
+	  					winUnitList_edit.setParam(selectUnits);
+	  				}
+	  				winUnitList_edit.open();
+	  			});
+	 		},
+	 		ok : function(){
+	 			winUserEdit.find('#userForm').submit();
+	 		},
+	 		cancel : function(){
+	 			winUserEdit.close();
+	 		}
+  		};
+  		$(function(){
+  			oUserEdit.initForm();
+			oUserEdit.initWindows();
+			oUserEdit.initToolbar();//初始化按钮
+  		});
+	</script>
+    <div class="easyui-layout" data-options="fit:true">
+			<div data-options="region:'center',border:false">
+				<form id="userForm" method="post" style="padding-top:10px;padding-left:20px;">
+				<input type="hidden" name="id" value="$!user.id"/>
+				<input type="hidden" name="loginName" value="$!user.loginName"/>
+				<table width="90%">
+					<tr>
+						<td>用户名：</td>
+						<td>
+						<input class="easyui-validatebox" type="text" maxlength="20" data-options="required:true,validType:'minLength[3]'" value="$!user.loginName" disabled="disabled" style="width:90%"/>  
+						</td>
+						<td>
+							姓名：
+						</td>
+						<td>
+							<input class="easyui-validatebox" type="text" name="realName" maxlength="20" data-options="required:true,validType:'minLength[2]'" value="$!user.realName" style="width:90%"/>  
+						</td>
+					</tr>
+					<tr>
+						<td>新密码：</td>
+						<td>
+						<input id="edit_pwd" class="easyui-validatebox" type="password" name="passWord" maxlength="20" data-options="required:true,validType:'minLength[6]'" value="$!user.passWord" style="width:90%"/>  
+						</td>
+						<td>
+							确认新密码：
+						</td>
+						<td>
+							<input class="easyui-validatebox" type="password" name="rPassWord" maxlength="20" required="true" validType="equals['#edit_pwd']" value="$!user.passWord" style="width:90%"/>  
+						</td>
+					</tr>
+					<tr>
+						<td>固定电话：</td>
+						<td>
+						<input class="easyui-validatebox" name="telphone" maxlength="20" data-options="validType:'telphone'" value="$!user.telphone" style="width:90%"/>  
+						</td>
+						<td>
+							手机：
+						</td>
+						<td>
+							<input class="easyui-validatebox" name="mobile" maxlength="20" data-options="validType:'mobile'" value="$!user.mobile" style="width:90%"/>  
+						</td>
+					</tr>
+					<tr>
+						<td>Email：</td>
+						<td>
+						<input class="easyui-validatebox" name="eMail" maxlength="50" data-options="validType:'email'" value="$!user.eMail" style="width:90%"/>  
+						</td>
+						<td>
+							QQ：
+						</td>
+						<td>
+							<input class="easyui-validatebox" name="qQ" maxlength="12" value="$!user.qQ" style="width:90%"/>  
+						</td>
+					</tr>
+					<tr>
+						<td>个人主页：</td>
+						<td colspan="3">
+							<input class="easyui-validatebox" name="web" maxlength="50" data-options="validType:'url'" value="$!user.web" style="width:96%"/>  
+						</td>
+					</tr>
+					<tr>
+						<td>地址：</td>
+						<td colspan="3">
+							<textarea class="easyui-textarea" name="address" rows="3" style="width:96%;">$!user.address</textarea>  
+						</td>
+					</tr>
+					<tr>
+						<td>是否启用：</td>
+						<td colspan="3">
+							<label>启用</label>
+							<input type="radio" name="enabled" value="0"/>
+							<label>不启用</label>
+							<input type="radio" name="enabled" value="1"/>
+							#setRadioValue("user_edit","enabled","$!user.enabled")
+						</td>
+					</tr>
+					<tr>
+						<td>页面风格：</td>
+						<td colspan="3">
+							<select class="easyui-combobox" name="pageStyle" data-options="editable:false">
+								<option value="default">默认</option>
+								<option value="blue">Blue</option>
+								<option value="cupertino">Cupertino</option>
+								<option value="metro-blue">Metro-Blue</option>
+								<option value="metro-gray">Metro-Bray</option>
+								<option value="metro-green">Metro-Green</option>
+								<option value="metro-orange">Metro-Orange</option>
+								<option value="metro-red">Metro-Red</option>
+							</select>
+							#setSelectValue("user_edit","pageStyle","$!user.pageStyle")
+						</td>
+					</tr>
+					<tr>
+						<td>角色列表：</td>
+						<td colspan="3">
+							<input type="hidden" id="userRoles" name="userRoles" value="$!roleids"/>
+							<a id="btnRoleList" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-role-add'">选择</a> 
+							<span id="userRoles_Tip">
+							#if($!rolenames)
+							已选择:$!rolenames
+							#else
+							默认为$!defaultRole
+							#end
+							</span>
+						</td>
+					</tr>
+					<tr>
+						<td>部门列表：</td>
+						<td colspan="3">
+							<input type="hidden" id="userUnits" name="userUnits" value="$!unitids"/>
+							<a id="btnUnitList" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-unit-add'">选择</a>
+							<span id="userUnits_Tip">
+							#if($!unitnames)
+							已选择:$!unitnames
+							#else
+							默认为$!defaultUnit
+							#end
+							</span>
+						</td>
+					</tr>
+				</table>
+				</form>
+			</div>
+			<div data-options="region:'south',border:false">
+				<div class="dialog-button">
+					<a id="ok" class="easyui-linkbutton" data-options="iconCls:'icon-ok'" href="javascript:void(0)" onclick="oUserEdit.ok()">确定</a>
+					<a id="cancel" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" href="javascript:void(0)" onclick="oUserEdit.cancel()">取消</a>
+				</div>
+			</div>
+		</div>
+  </body>
+</html>

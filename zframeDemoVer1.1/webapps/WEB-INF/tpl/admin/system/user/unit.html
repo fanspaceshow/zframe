@@ -1,0 +1,88 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>res_edit.html</title>
+</head>
+ <body>
+ <script type="text/javascript">
+ 	var winUnitList = new Windows("user_unit");
+ 	var oUnitList = {
+ 		isFirstLoad : true,
+ 		initTree : function(){
+ 			winUnitList.find("#unitTree").tree({
+	 			url:'$!basePath/admin/unit/unitListForUser',
+	 			animate:true,
+	 			onLoadSuccess:function(node,data){
+	 				if(!oUnitList.isFirstLoad){
+	 					var selectedUnit = winUnitList.getParam();
+	 					var unitTree = winUnitList.find("#unitTree");
+		 				if(selectedUnit.length>0){
+			 				var node = unitTree.tree("find",selectedUnit);
+			 				unitTree.tree("select",node.target);
+		 				}else{
+		 					var rootNodes = winUnitList.find("#unitTree").tree("getRoots");
+		 					for(var i= 0;i<rootNodes.length;i++){
+		 						var rootNode = rootNodes[i];
+		 						if(rootNode.text == "$!defaultUnit"){
+		 							unitTree.tree("select",rootNode.target);
+		 							break;
+		 						}else{
+		 							var childNodes = unitTree.tree("getChildren",rootNode.target);
+		 							for(var j=0;j<childNodes.length;j++){
+		 								var childNode = childNodes[j];
+		 								if(childNode.text == "$!defaultUnit"){
+		 									unitTree.tree("select",childNode.target);
+		 								}
+		 							}
+		 						}
+		 					}
+		 				}
+	 				}else{
+	 					oUnitList.isFirstLoad = false;
+	 				}
+	 			}
+	 		});
+ 		},
+ 		ok : function(){
+ 			var selectNode = winUnitList.find("#unitTree").tree("getSelected");
+			if(selectNode){
+				var selectUnit = new JSONObject();
+				selectUnit.put("id", selectNode.id);
+				selectUnit.put("name",selectNode.text);
+				winUnitList.setReturnValue(selectUnit);
+				winUnitList.close();
+			}else{
+				top.Dialog.confirm("提示","您没有选择部门，是否使用默认部门?",function(r){
+					if(r){
+						winUnitList.setReturnValue("default");
+						winUnitList.close();
+					}
+				});
+			}
+ 		},
+ 		cancel : function(){
+ 			winUnitList.setReturnValue("false");
+  			winUnitList.close();
+ 		}
+ 	};
+ 	$(function(){
+ 		oUnitList.initTree();
+ 	});
+ </script>
+ <div class="easyui-layout" data-options="fit:true">
+	 <div data-options="region:'center',border:false">
+	 	<form id="resForm" method="post" style="padding-left:20px;padding-top:5px;padding-right:20px;">
+	 		<ul id="unitTree" class="easyui-tree"></ul>
+		</form>
+	 </div>
+	 <!--Change Button Text-->
+	 <div data-options="region:'south',border:false">
+		<div class="dialog-button">
+			<a id="ok" class="easyui-linkbutton" data-options="iconCls:'icon-ok'" href="javascript:void(0)" onclick="oUnitList.ok()">确定</a>
+			<a id="cancel" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" href="javascript:void(0)" onclick="oUnitList.cancel()">取消</a>
+		</div>
+	</div>
+ </div>
+  </body>
+</html>

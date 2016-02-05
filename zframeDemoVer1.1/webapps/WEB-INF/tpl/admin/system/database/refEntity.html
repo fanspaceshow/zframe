@@ -1,0 +1,56 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>实体反射</title>
+</head>
+ <body>
+ <script type="text/javascript" src="$!basePath/framework/js/core/plugin/zframe.clipboard.js"></script>
+ <script type="text/javascript">
+ 	var winDbEntity = new Windows("win_db_entity");
+ 	var oDbEntity = {
+ 		cancel:function(){
+ 			winDbEntity.close();
+ 		}
+ 	}
+	$(function(){
+		winDbEntity.find("#btnCodeCopy").click(function(){
+			if(zClipBoard.setData($("pre").html())){
+				top.Notiy.success("代码已复制到粘贴板!");
+			}else{
+				top.Notiy.error("您的浏览器不支持复制功能!");
+			}
+		});
+		winDbEntity.find("#btnGender").click(function(){
+			top.Dialog.progress({text:"正在努力生成..."});
+			jQuery.post("$!basePath/admin/database/gen/$!tableName",{},function(data){
+				if(data.success == true){
+					top.Dialog.progress({text:"生成完毕，即将下载..."});
+					winDbEntity.find("#frmDownload").submit();
+					top.Dialog.progress("close");
+				}else{
+					top.Dialog.progress("close");
+					top.Dialog.error(data.error);
+				}
+			},"json");
+		});
+	});
+</script>
+ <div class="easyui-layout" data-options="fit:true">
+	 <div data-options="region:'center',border:false" style="padding:10px;">
+	 <form id="frmDownload" action="$!basePath/admin/database/dl/$!tableName" method="post"></form>
+	 	<div>
+	 		<a id="btnCodeCopy" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-application-double'">复制代码</a>&nbsp;
+	 		<a id="btnGender" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-application-put'">下载代码和页面</a>
+	 	</div>
+	 	<pre>$!code</pre>
+	 </div>
+	 <!--Change Button Text-->
+	<div data-options="region:'south',border:false">
+		<div class="dialog-button">
+			<a id="cancel" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" href="javascript:void(0)" onclick="oDbEntity.cancel()">关闭</a>
+		</div>
+	</div>
+ </div>
+  </body>
+</html>

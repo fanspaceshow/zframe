@@ -1,0 +1,245 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>index.html</title>
+	#style
+</head>
+ <body class="easyui-layout">
+ <script type="text/javascript">
+ 	var winSafeIpAdd = new Windows("safe_ip_add");
+ 	var winSafeIpEdit = new Windows("safe_ip_edit");
+	$(function(){
+	     initDataGrid();
+	     initWindows();
+	     initToolbar();
+	     initIpRole();//初始化IP安全规则
+	});
+	function initDataGrid(){
+		 $('#dgSafeIp').datagrid({
+				autoRowHeight: false,
+				collapsible:true,
+				url:'$!basePath/admin/safeip',
+				sortName: 'id',
+				sortOrder: 'asc',
+				remoteSort: true,
+				border:true,
+				fit:true,
+				idField:'id',
+				frozenColumns:[[
+	                {field:'ck',checkbox:true},
+	                {title:'序号',field:'id',width:40,sortable:true}
+				]],
+				columns:[[
+					{field:'ip',title:'IP地址',width:200,sortable:true,
+						sorter:function(a,b){
+							return (a>b?1:-1);
+						},formatter:function(value,row,index){
+							return highShowSearch($("#dgSafeIp"),"ip",value);
+						}
+					},
+					{field:'enabled',title:'状态',width:50,formatter:function(value,row,index){
+						if(value=="0")
+							return "生效";
+						else if(value=="1")
+							return "<span style='color:red;'>未生效<span>";
+					}}
+				]],
+				pagination:true,
+				rownumbers:true,
+				toolbar:'#dgSafeIp-toolbar'
+			});
+	}
+	function initWindows(){
+		winSafeIpAdd.windows({
+			title:'新增IP',
+			width:450,
+			height:250,
+			modal:true,
+			cache:false,
+			closed:true,
+			iconCls:'icon-ip-add',
+			href:"$!basePath/admin/safeip/add",
+			onClose:function(){
+				if(winSafeIpAdd.getReturnValue()=="true"){
+					$('#dgSafeIp').datagrid("reload");
+				}
+			}
+		});
+		winSafeIpEdit.windows({
+			title:'编辑IP',
+			width:450,
+			height:250,
+			modal:true,
+			cache:false,
+			closed:true,
+			iconCls:'icon-ip-add',
+			href:"$!basePath/admin/safeip/edit",
+			onClose:function(){
+				if(winSafeIpEdit.getReturnValue()=="true"){
+					$('#dgSafeIp').datagrid("reload");
+				}
+			}
+		});
+	}
+	function initToolbar(){
+		$("#dgSafeIp-toolbar").find("#btnAdd").click(function(){
+			winSafeIpAdd.open();
+		});
+		$("#dgSafeIp-toolbar").find("#btnEdit").click(function(){
+			var selectRows = $("#dgSafeIp").datagrid("getSelected");
+			if(!selectRows){
+				top.Notiy.warning("请选择要编辑的项");
+			}else{
+				winSafeIpEdit.windows({href:"$!basePath/admin/safeip/edit/"+selectRows.id});
+				winSafeIpEdit.windows("open");
+			}
+		});
+		$("#dgSafeIp-toolbar").find("#btnRemove").attr("deleteUrl","$!basePath/admin/safeip/doDelete");
+		$("#dgSafeIp-toolbar").find("#btnRemove").click(function(){
+			DataGridUtil.Delete("$!basePath/admin/safeip/doDelete","dgSafeIp");
+		});
+		$("#dgSafeIp-toolbar").find("#btnDisable").click(function(){
+			enableOrDisableIp(1);
+		});
+		$("#dgSafeIp-toolbar").find("#btnEnable").click(function(){
+			enableOrDisableIp(0);
+		});
+		$("#dgSafeIp-toolbar").find("#btnExportExcel").click(function(){
+			DataGridUtil.exportExcel($("#dgSafeIp"),"SafeIp");
+		});
+		$("#dgSafeIp-toolbar").find("#btnSaveSafeIpType").click(function(){
+			var type = $("#dgSafeIp-toolbar").find("input:radio[name='safeIpType']:checked").val();
+			$.post("$!basePath/admin/safe/changeSafeIpType/"+type,{},function(data){
+				if(data.isChanged){
+					top.Notiy.success("保存成功!");
+				}else{
+					top.Dialog.error(data.error);
+				}
+			},"json");
+		});
+		$("#dgSafeIp-toolbar").find("#btnIpRole").click(function(){
+			var btnIpRole = $("#dgSafeIp-toolbar").find("#btnIpRole");
+			var text = btnIpRole.linkbutton("options").text;
+			var tag = true;
+			if(text.startWith("开启")){
+				tag = true;
+			}else{
+				tag = false;
+			}
+			$.post("$!basePath/admin/safe/openOrCloseIpRole/"+tag,{},function(data){
+				if(data.isChanged){
+					if(tag){
+						top.Notiy.success("开启成功!");
+						btnIpRole.linkbutton({
+							text:"关闭IP安全规则",
+							iconCls:"icon-lock"
+						});
+					}else{
+						top.Notiy.success("关闭成功!");
+						btnIpRole.linkbutton({
+							text:"开启IP安全规则",
+							iconCls:"icon-unlock"
+						});
+					}
+					initIpRole(tag.toString());
+				}else{
+					top.Dialog.error(data.error);
+				}
+			},"json");
+		});
+	}
+	//0 启用 1禁用
+	function enableOrDisableIp(type){
+		var ids = DataGridUtil.getSelectionsIds($("#dgSafeIp"));
+		if(ids.length>0){
+			$.post("$!basePath/admin/safeip/doEnableOrDisable",{type:type,ids:ids.toString()},function(data){
+				$('#dgSafeIp').datagrid("reload");
+			},"json");
+		}else{
+			top.Notiy.warning("请选择要操作的IP!");
+		}
+	}
+	function initIpRole(state){
+		var ipRole = "$!IpRoleState";
+		if(state){
+			ipRole = state;
+		}
+		if(ipRole == "true"){
+			var tools = $("#dgSafeIp-toolbar").find(".easyui-linkbutton");
+			for(var i=0;i<tools.length;i++){
+				var tool = $(tools[i]);
+				if(tool.attr("id") != "btnIpRole" && tool.attr("id") != "btnExportExcel"){
+					tool.linkbutton("reset");
+				}
+			}
+			$("#dgSafeIp-toolbar").find("input:radio[name='safeIpType']").removeAttr("disabled");
+		}else{
+			var tools = $("#dgSafeIp-toolbar").find(".easyui-linkbutton");
+			for(var i=0;i<tools.length;i++){
+				var tool = $(tools[i]);
+				if(tool.attr("id") != "btnIpRole" && tool.attr("id") != "btnExportExcel"){
+					tool.linkbutton("disable");
+					tool.unbind("click");
+				}
+			}
+			$("#dgSafeIp-toolbar").find("input:radio[name='safeIpType']").attr("disabled","true");
+		}
+	}
+	function safeIpDoSearch(v,n){
+		doDataGridSearch("dgSafeIp",n,v);
+	}
+ </script>
+    <div data-options="region:'center',border:false">
+		<div id="safeTabs" class="easyui-tabs" data-options="fit:true">  
+		    <div title="IP安全策略" style="padding-top:2px;">  
+		        <table id="dgSafeIp"></table>
+		    </div>  
+		    <div title="黑名单" data-options="" style="overflow:auto;padding-top:2px;">  
+		        <table id="dgSafeBlack"></table>1
+		    </div>
+		    <div title="白名单" data-options="" style="overflow:auto;padding-top:2px;">  
+		        <table id="dgSafeWhite"></table>2
+		    </div>
+		</div> 
+    </div>
+    <!--Tools And ContextMenu-->
+    <!-- 工具条 -->
+    <div id="dgSafeIp-toolbar" style="padding:2px 0;" class="datagrid-toolbar">
+		<table cellpadding="0" cellspacing="0" style="width:100%">
+			<tr>
+				<td width="505" style="padding-left:2px">
+					<a id="btnIpRole" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-unlock',plain:true" style="float: left;">开启IP安全规则</a>
+					<div class="datagrid-btn-separator"></div>
+					<a id="btnAdd" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-ip-add',plain:true" style="float: left;">新增</a>
+					<a id="btnEdit" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-ip-edit',plain:true" style="float: left;">修改</a>
+					<a id="btnRemove" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-ip-delete',plain:true" style="float: left;">删除</a>
+					<div class="datagrid-btn-separator"></div>
+					<a id="btnDisable" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-disable',plain:true" style="float: left;">禁用</a>
+					<a id="btnEnable" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-enable',plain:true" style="float: left;">启用</a>
+					<div class="datagrid-btn-separator"></div>
+					<a id="btnExportExcel" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-export-excel',plain:true" style="float: left;">导出Excel</a>
+					<div class="datagrid-btn-separator"></div>
+				</td>
+				<td style="padding-left:5px;">
+					<div>
+						IP策略:
+						<label>允许</label>
+						<input type="radio" name="safeIpType" value="0" #if($!safeIpConfig=="Allow")checked="checked"#end/>
+						<label>禁止</label>
+						<input type="radio" name="safeIpType" value="1" #if($!safeIpConfig=="Deny")checked="checked"#end/>
+						<a id="btnSaveSafeIpType" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-save',plain:true">保存</a>
+					</div>
+				</td>
+				<td style="text-align:right;padding-right:2px">
+					<input id="ss" style="width:240px;" class="easyui-searchbox" data-options="searcher:safeIpDoSearch,prompt:'请输入查询内容',menu:'#ss_mm'"></input>
+					<div id="ss_mm" style="width:80px;">
+						<div data-options="name:'id'">序号</div>
+						<div data-options="name:'ip'">IP地址</div>
+					</div>
+				</td>
+			</tr>
+		</table>
+	</div>
+  </body>
+</html>

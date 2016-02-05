@@ -1,0 +1,76 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>res_edit.html</title>
+</head>
+ <body>
+ <script type="text/javascript">
+ 	var winSafeIpEdit = new Windows("safe_ip_edit");
+ 	var oSafeIpEdit = {
+ 		initForm : function(){
+ 			winSafeIpEdit.find("#safeIpForm").form({
+	 			url:'$!basePath/admin/safeip/doEdit',
+	 			onSubmit: function(){
+			    	var pass = winSafeIpEdit.find('#safeIpForm').form("validate");
+			    	if(pass){
+			    		winSafeIpEdit.find("#ok").linkbutton("loading");
+			    	}
+			    	return pass; 
+			    },   
+			    success:function(data){
+			   		var result = jQuery.parseJSON(data);   
+			        if(result.success == true){
+			       		top.Notiy.success("修改成功!");
+		        		winSafeIpEdit.setReturnValue(true);
+						winSafeIpEdit.close();
+			        }else{
+			        	top.Dialog.alert("提示",result.error,"error");
+			        }
+			        winSafeIpEdit.find("#ok").linkbutton("reset");
+			    }
+	 		});
+ 		},
+ 		ok : function(){
+ 			winSafeIpEdit.find('#safeIpForm').submit();
+ 		},
+ 		cancel : function(){
+ 			winSafeIpEdit.close();
+ 		}
+ 	};
+ 	$(function(){
+ 		oSafeIpEdit.initForm();
+ 	});
+ </script>
+ <div class="easyui-layout" data-options="fit:true">
+	 <div data-options="region:'center',border:false">
+	 	<form id="safeIpForm" method="post" style="padding-top:50px;padding-left:60px;">
+	 		<input type="hidden" name="id" value="$!safeIp.id"/>
+	 		<table width="90%" style="line-height: 25px;">
+				<tr>
+					<td>IP地址:</td>
+					<td>
+						<input type="text" class="easyui-validatebox" name="ip" maxlength="20" data-options="required:true,validType:'ip'" style="width: 90%;" value="$!safeIp.ip"/>
+					</td>
+				</tr>
+				<td>是否启用：</td>
+				<td>
+					<label>启用</label>
+					<input type="radio" name="enabled" value="0" checked="checked"/>
+					<label>不启用</label>
+					<input type="radio" name="enabled" value="1"/>
+					#setRadioValue("safe_ip_edit","enabled","$!user.enabled")
+				</td>
+			</table>
+		</form>
+	 </div>
+	 <!--Change Button Text-->
+	 <div data-options="region:'south',border:false">
+	 	<div class="dialog-button">
+			<a id="ok" class="easyui-linkbutton" data-options="iconCls:'icon-ok'" href="javascript:void(0)" onclick="oSafeIpEdit.ok()">确定</a>
+			<a id="cancel" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" href="javascript:void(0)" onclick="oSafeIpEdit.cancel()">取消</a>
+		</div>
+	</div>
+ </div>
+  </body>
+</html>

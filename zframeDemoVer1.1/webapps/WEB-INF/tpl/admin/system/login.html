@@ -1,0 +1,88 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+<link rel="shortcut icon" type="image/x-icon" href="$!basePath/framework/images/favicon.ico" />
+<title>系统登录</title>
+#tipStyle
+<link href="$!basePath/framework/css/login/$!login_theme/login.css" rel="stylesheet" type="text/css" id="skin"/>
+<link href="$!basePath/framework/css/easyui/default/easyui.css" rel="stylesheet" type="text/css"/>
+<link href="$!basePath/framework/css/easyui/icon.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="$!basePath/framework/js/core/zframe.ui.min.js"></script>
+<script type="text/javascript" src="$!basePath/framework/js/core/zframe.ui-lang-zh_CN.js"></script>
+<script type="text/javascript" src="$!basePath/framework/js/core/plugin/zframe.dialog.js"></script>
+<script type="text/javascript" src="$!basePath/framework/js/common/zframe.cookie.js"></script>
+<script type="text/javascript" src="$!basePath/framework/js/common/zframe.login.js"></script>
+<script type="text/javascript" src="$!basePath/framework/js/common/zframe.center-plugin.js"></script>
+<script type="text/javascript" src="$!basePath/framework/js/common/jquery.corner.js"></script>
+<script type="text/javascript" src="$!basePath/framework/js/core/zframe.common.js"></script>
+<script type="text/javascript" src="$!basePath/framework/js/core/plugin/zframe.notiy.js"></script>
+<style><!--
+/*提示信息*/	
+#cursorMessageDiv {
+	position: absolute;
+	z-index: 99999;
+	border: solid 1px #cc9933;
+	background: #ffffcc;
+	padding: 2px;
+	margin: 0px;
+	display: none;
+	line-height:150%;
+}
+#loadding {
+	position: absolute;
+	top: 45%;
+	left: 50%;
+	margin-left: -40px;
+	margin-top: -10px;
+	width: 60px;
+	height: 40px;
+	line-height: 25px;
+	display: none;
+	text-align:center;
+	padding-top:10px;
+	font-size:12px;
+	font-weight:bold;
+	color:white;
+	filter: alpha(opacity = 40);
+	background-color: #b6b6b7;
+	moz-opacity: 0.5;
+	opacity: 0.6;
+}
+</style>
+</head>
+<body >
+	<div class="login_main">
+		<div class="login_top">
+			<div class="login_title1"></div>
+		</div>
+		<div class="login_middle">
+			<div class="login_middleleft"></div>
+			<div class="login_middlecenter">
+					<form id="loginForm" action="$!basePath/admin/login/doLogin" class="login_form" method="post">
+					<input type="hidden" id="basePath" value="$!basePath"/>
+					#if($!isForcedExit)
+					<input type="hidden" id="isForcedExit" value="true"/>
+					#end
+					<div class="login_user"><input type="text" id="username" title="请输入用户名"/><label for="username"></label></div>
+					<div class="login_pass"><input type="password" id="password" title="请输入密码"/><label for="password"></label></div>
+					<div class="clear"></div>
+					<div class="login_button">
+						<div class="login_button_left"><input id="submitButton" type="button" onclick="return login()"/></div>
+						<div class="login_button_right"><input type="reset" value=""/></div>
+						<div class="clear"></div>
+					</div>
+					</form>
+					<div class="login_info" style="display:none;"></div>
+			</div>
+			<div class="login_middleright"></div>
+			<div class="clear"></div>
+		</div>
+		<div class="login_bottom">
+			<div class="login_copyright">#copyright</div>
+		</div>
+	</div>
+	<div id="loadding"><img src="$!basePath/framework/images/loading2.gif"/></div>
+</body>
+</html>
+
