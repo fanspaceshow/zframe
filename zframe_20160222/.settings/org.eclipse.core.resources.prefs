@@ -1,0 +1,6 @@
+#Wed Feb 17 17:08:05 CST 2016
+eclipse.preferences.version=1
+encoding//src/org/zframework/conf/jdbc_mysql.properties=UTF-8
+encoding//src/org/zframework/conf/jdbc_oracle.properties=UTF-8
+encoding//webapps/WEB-INF/tpl/admin/system/updown/index.html=UTF-8
+encoding/<project>=UTF-8

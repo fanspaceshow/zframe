@@ -1,0 +1,122 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>add.html</title>
+</head>
+ <body>
+<script type="text/javascript">
+$(function () {
+            var projecttype = $('#projecttype').combobox({
+                url:'$!basePath/admin/clientcompany/showtypelist', 
+                valueField: 'id',
+                textField: 'text'
+
+            });
+        
+        });
+</script>
+	
+ <script type="text/javascript">
+ 	var winProAdd = new Windows("client_add");
+ 	var oProAdd = {
+ 	
+ 		initForm : function(){
+ 			winProAdd.find("#proForm").form({
+ 				url:'$!basePath/admin/clientcompany/doAdd',
+ 				onSubmit: function(){
+			    	var pass = winProAdd.find('#proForm').form("validate");
+			    	
+			    	if(pass){
+			    		winProAdd.find("#ok").linkbutton("loading");
+			    	}
+			    	return pass; 
+			    },   
+			    success:function(data){
+			   		var result = jQuery.parseJSON(data);   
+			        if(result.success == true){
+			       		top.Notiy.success("添加成功!");
+		        		winProAdd.setReturnValue(true);
+						winProAdd.close();
+			        }else{
+			        	top.Dialog.alert("提示",result.error,"error");
+			        }
+			        winProAdd.find("#ok").linkbutton("reset");
+			    }
+ 			});
+ 		},
+ 		ok : function(){
+ 		
+ 			winProAdd.find('#proForm').submit();
+ 		},
+ 		cancel : function(){ 		
+ 			winProAdd.close();
+ 		}
+ 	};
+ 	$(function(){
+ 		oProAdd.initForm();
+ 	});
+ </script>
+ <div class="easyui-layout" data-options="fit:true">
+	 <div data-options="region:'center',border:false">
+	 	<form id="proForm" method="post" style="padding-top:10px;padding-left: 20px;">
+	 		<table width="90%" >
+					<tr>
+						<td>客户姓名：</td>
+						<td>
+							<input type="text" class="easyui-validatebox" name="name" maxlength="50" data-options="required:true" style="width: 90%;" />
+						</td>
+					</tr>
+					<tr>
+						<td>公司名称：</td>
+						<td>
+							<input type="text" class="easyui-validatebox" name="company" maxlength="50" data-options="required:true" style="width: 90%;" />
+						</td>
+					</tr>
+					<tr>
+						<td>年龄：</td>
+						<td>
+							<input type="text" class="easyui-validatebox" name="age" maxlength="50" data-options="required:true" style="width: 90%;" />
+						</td>
+					</tr>
+			   	<tr>
+						<td>公司名称：</td>
+						<td colspan="3">
+							<select id="projecttype" class="easyui-combobox" name="company" style="width:90%;" 
+							data-options="editable:false,width:245,required:true" valueField="id" textField="text">
+                             <option selected="selected" >--请选择--</option>
+							</select> 
+						</td>
+					</tr>
+					<tr>
+						<td>是否启用：</td>
+						<td colspan="3">
+							<label>启用</label>
+							<input type="radio" name="enabled" value="0" checked="checked"/>
+							<label>不启用</label>
+							<input type="radio" name="enabled" value="1"/>
+						</td>
+					</tr>	
+				 	<tr>
+				 	<td>
+				 	
+                    </td>
+                    <td>
+                    <input type="checkbox" name="vehicle" value="Bike">发给I have a bike<br>
+                    <input type="checkbox" name="vehicle" value="Car">阿萨德I have a car 
+                    </td>                   
+				 	</tr>
+									
+				</table>
+		</form>
+	 </div>
+	 <!--Change Button Text-->
+	 <div data-options="region:'south',border:false">
+	 	<div class="dialog-button">
+			<a id="ok" class="easyui-linkbutton" data-options="iconCls:'icon-ok'" href="javascript:void(0)" onclick="oProAdd.ok()">确定</a>
+			<a id="cancel" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" href="javascript:void(0)" onclick="oProAdd.cancel()">取消</a>
+		</div>
+	</div>
+ </div>
+  </body>
+</html>

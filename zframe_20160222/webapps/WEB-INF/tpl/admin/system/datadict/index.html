@@ -1,0 +1,204 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>index.html</title>
+	#style
+	#tree
+</head>
+ <body class="easyui-layout">
+ <script type="text/javascript">
+ 	var winAdd = new Windows("win_datadict_add");
+ 	var winEdit = new Windows("win_datadict_edit");
+	$(function(){
+	     initDataGrid();
+	     initWindows();
+	     initToolbar();
+	});
+	function initDataGrid(){
+		$('#dgDataDictList').datagrid({
+				autoRowHeight: false,
+				collapsible:true,
+				url:'$!basePath/admin/datadict/list?type=$!type',
+				sortName: 'location',
+				sortOrder: 'asc',
+				remoteSort: true,
+				border:false,
+				fit:true,
+				idField:'id',
+				title:'数据项',
+				frozenColumns:[[
+	                {field:'ck',checkbox:true}
+				]],
+				columns:[[
+					{title:'名称/键',field:'name',width:150},
+					{title:'值',field:'value',width:150},
+					{title:'描述',field:'descript',width:300},
+					{title:'排序',field:'location',width:30,align:'center'}
+				]],
+				pagination:true,
+				rownumbers:true,
+				toolbar:'#dgDataDictList-toolbar',
+				onRowContextMenu:function(e,rowindex,rowData){
+					rowContentMenuShowHandler(e,rowindex,rowData,"dgDataDictList","dgDataDictList_rowContextMenu");
+				},
+				onDblClickRow:function(rowindex,rowdata){
+					winEdit.setHref("$!basePath/admin/datadict/edit/"+rowdata.id);
+					winEdit.open();
+				}
+			});
+	}
+	function initWindows(){
+		winAdd.windows({
+			title:'新增字典数据',
+			width:650,
+			height:450,
+			modal:true,
+			cache:false,
+			iconCls:'icon-datadict-add',
+			href:"$!basePath/admin/datadict/add",
+			onClose:function(){
+				if(winAdd.isSuccess()){
+					$("#ddType").tree("reload");
+					$("#dgDataDictList").datagrid("reload");
+				}
+			}
+		});
+		winEdit.windows({
+			title:'修改字典数据',
+			width:350,
+			height:250,
+			modal:true,
+			cache:false,
+			iconCls:'icon-datadict-add',
+			href:"$!basePath/admin/datadict/edit",
+			onClose:function(){
+				if(winEdit.isSuccess()){
+					$("#dgDataDictList").datagrid("reload");
+				}
+			}
+		});
+	}
+	function initToolbar(){
+		$("#btnAdd").click(function(){
+			var node = $("#ddType").tree("getSelected");
+			if(node!=null){
+				var param = new JSONObject();
+				param.put("type","text");
+				param.put("val",node.text);
+				if(node.id != -1){
+					param.put("type", "id");
+					param.put("val",node.id);
+				}
+				winAdd.setParam(param.toString());
+			}
+			winAdd.open();
+		});
+		$("#btnEdit").click(function(){
+	        var selectRows = $("#dgDataDictList").datagrid("getSelected");
+	            if(!selectRows){
+	                top.Notiy.warning("请选择要编辑的项");
+	            }else{
+	                winEdit.windows({href:"$!basePath/admin/datadict/edit/"+selectRows.id});
+	                winEdit.windows("open");
+	            }
+	    });
+		$("#btnRemove").attr("deleteUrl","$!basePath/admin/datadict/doDelete");
+		$("#btnRemove").click(function(){
+			DataGridUtil.Delete("$!basePath/admin/datadict/doDelete","dgDataDictList");
+		});
+		$("#btnCacheSync").click(function(){
+			var jq = $(this);
+			jq.linkbutton("loading");
+			jQuery.post("$!basePath/admin/datadict/sync",{},function(data){
+				if(data.success == true){
+					jq.linkbutton("reset");
+					top.Notiy.success("同步成功!");
+				}else{
+					top.Dialog.error(data.error);
+				}
+			},"json");
+		});
+	}
+	function doEditForContentMenu_btnEdit(id){
+		winEdit.setHref("$!basePath/admin/datadict/edit/"+id);
+		winEdit.open();
+	}
+	function rowContentMenuClickHandler(item){
+		ContentMenuClickHandler("dgDataDictList",item);
+	}
+	function doSearch(v,n){
+		doDataGridSearch("dgDataDictList",n,v);
+	}
+ </script>
+ 	<div data-options="region:'west',split:false,border:false,width:200" style="padding-right:1px;">
+		<div class="easyui-panel" data-options="title:'字典名称',fit:true,tools:[{iconCls:'icon-assets-book-delete',handler:function(){
+			var selNode = $('#ddType').tree('getSelected');
+			if(selNode != null){
+				if(selNode.id != -1){
+					top.Dialog.confirm('节点下所有数据都将丢失，确定删除吗?',function(r){
+						if(r){
+							jQuery.post('$!basePath/admin/datadicttype/delete/'+selNode.id,{},function(data){
+								if(data.success == true){
+									$('#ddType').tree('reload');
+								}else{
+									top.Dialog.error(data.error);
+								}
+							},'json');
+						}
+					});
+				}else{
+					top.Notiy.warning('虚拟类型节点无法删除!');
+				}
+			}else{
+				top.Notiy.warning('请选择要删除的字典数据!');
+			}
+		}}]" style="padding-left:5px;">
+			<ul id="ddType" class="easyui-tree" data-options="animate:true,url:'$!basePath/admin/datadicttype/tree',onSelect:function(node){
+				if(node.id != -1){
+					var dg = $('#dgDataDictList');
+					dg.datagrid({url:'$!basePath/admin/datadict/list?type='+node.id,title:node.desc+'  -  数据项'});
+					dg.datagrid('reload');
+				}
+			},onLoadSuccess:function(n,d){
+				var typeId = $!type;
+		     if(typeId != -1){
+		     	$(this).tree('select',$(this).tree('find',typeId).target);
+		     }
+			}"></ul>  
+		</div>
+    </div>
+    <div data-options="region:'center',border:true">
+		<table id="dgDataDictList"></table>
+    </div>
+    <!--Tools And ContextMenu-->
+    <div id="dgDataDictList-toolbar" style="padding:2px 0;" class="datagrid-toolbar">
+		<table cellpadding="0" cellspacing="0" style="width:100%">
+			<tr>
+				<td style="padding-left:2px">
+					<a id="btnAdd" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-datadict-add',plain:true" style="float: left;">新增</a>
+					<a id="btnEdit" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-datadict-edit',plain:true" style="float: left;">修改</a>
+					<a id="btnRemove" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-datadict-delete',plain:true" style="float: left;">删除</a>
+					<div class="datagrid-btn-separator"></div>
+					<a id="btnCacheSync" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-reload',plain:true" style="float: left;">同步缓存</a>
+				</td>
+				<td style="text-align:right;padding-right:2px">
+					<input id="ss" style="width:240px;" class="easyui-searchbox" data-options="searcher:doSearch,prompt:'请输入查询内容',menu:'#ss_mm'"></input>
+					<div id="ss_mm" style="width:80px;">
+						<div data-options="name:'name'">名称/键</div>
+						<div data-options="name:'name'">值</div>
+						<div data-options="name:'descript'">描述</div>
+					</div>
+				</td>
+			</tr>
+		</table>
+	</div>
+	<!-- 右键菜单 -->
+	<div id="dgDataDictList_rowContextMenu" data-options="onClick:rowContentMenuClickHandler" class="easyui-menu" style="width:120px;">
+		<div name="select" data-options="iconCls:'icon-ok'">选中</div>
+		<div name="edit" data-options="iconCls:'icon-assets-book-edit'" with="btnEdit">修改</div>
+		<div name="remove" data-options="iconCls:'icon-assets-book-delete'" with="btnRemove">删除</div>
+		<div name="removeSelected" data-options="iconCls:'icon-assets-book-delete'" with="btnRemove">删除已选中</div>
+	</div>
+  </body>
+</html>

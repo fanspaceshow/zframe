@@ -1,0 +1,99 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>上传图片</title>
+</head>
+<body>
+<style type="text/css">
+	.uploader-button{
+		background-color: transparent;
+        border: none;
+        padding: 0;
+	}
+</style>
+ <script type="text/javascript">
+ 	var winUploadImage = new Windows("sys_uploader_image");
+ 	
+ 	var oUploadImage = {
+ 		count : 0,
+ 		_uploadResult : new JSONObject(),
+ 		initUploader : function(){
+ 			winUploadImage.find("#uploaderImage").uploadify({
+		        swf : '$!basePath/framework/flash/uploadify.swf',
+		        uploader : '$!basePath/admin/uploader/doUploadFile',
+		        width : 120,
+		        auto:false,
+		       	buttonImage:'$!basePath/framework/images/browse-btn-image-zh_CN.png',
+		       	fileTypeDesc:"所有图片格式",
+		        fileTypeExts:'*.jpg; *.jpeg; *.gif; *.png; *.bmp; *.psd',
+		        buttonClass:'uploader-button',
+		        formData:{"uploadType":"images"},
+		        onUploadSuccess:function(file,data,response){
+		        	data = JSONObject.parseJSON(data);
+		        	if(data.result){
+		        		oUploadImage._uploadResult.put(file.name, data.path);
+		        	}
+		        },
+		        onQueueComplete:function(){
+		        	winUploadImage.find("#ok").linkbutton("reset");
+		        	winUploadImage.setReturnValue(oUploadImage._uploadResult);
+		        	oUploadImage._uploadResult = new JSONObject();
+					winUploadImage.close();
+		        },
+		        onSelect : function(){
+		        	oUploadImage.count++;
+		        	oUploadImage.restore();
+		        },onCancel:function(){
+		        	oUploadImage.count--;
+		        	if(oUploadImage.count == 0){
+		        		oUploadImage.center();
+		        	}
+		        }
+		    });
+ 		},
+ 		center : function(){
+ 			var left = (winUploadImage.getOptions().width-140)/2;
+			var top = (winUploadImage.getOptions().height-100)/2;
+			winUploadImage.find("#uploaderImage").css("left",left);
+			winUploadImage.find("#uploaderImage").css("top",top);
+ 		},
+ 		restore : function(){
+ 			winUploadImage.find("#uploaderImage").css("left",3);
+			winUploadImage.find("#uploaderImage").css("top",3);
+ 		},
+ 		ok : function(){
+ 			if(oUploadImage.count == 0){
+ 				top.Notiy.warning("请选择图片后再点击上传!");
+ 			}else{
+ 				winUploadImage.find("#ok").linkbutton("loading");
+ 				winUploadImage.find("#uploaderImage").uploadify("upload","*");
+ 			}
+ 		},
+ 		cancel : function(){
+ 			oUploadImage._uploadResult = new JSONObject();
+	  		winUploadImage.find("#uploaderImage").uploadify("cancel","*");
+	  		winUploadImage.close();
+ 		}
+ 	};
+ 	$(function(){
+		oUploadImage.initUploader();
+		oUploadImage.center();
+ 	});
+ </script>
+ <div class="easyui-layout" data-options="fit:true">
+	 <div data-options="region:'center',border:false">
+	 	<div>
+	 		<input id="uploaderImage" type="file"/>
+	 	</div>
+	 </div>
+	 <!--Change Button Text-->
+	 <div data-options="region:'south',border:false">
+	 	<div class="dialog-button">
+		<a id="ok" class="easyui-linkbutton" data-options="iconCls:'icon-ok'" href="javascript:void(0)" onclick="oUploadImage.ok()">上传</a>
+		<a id="cancel" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" href="javascript:void(0)" onclick="oUploadImage.cancel()">取消</a>
+		</div>
+	</div>
+ </div>
+  </body>
+</html>

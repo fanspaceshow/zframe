@@ -1,0 +1,70 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>图表</title>
+	#style
+	#highcharts
+	<script type="text/javascript">
+		var options = {
+			chart : {
+				renderTo : 'container',
+				type : 'line',
+				marginRight : 130
+			},
+			title : {
+				text : '系统模块访问量分析',
+				x : 0
+			},
+			subtitle : {
+				text : '访问次数',
+				x : 0
+			},
+			xAxis : {
+				title:{
+					text:'系统模块'
+				},
+				labels:{
+					rotation: 30,
+					 staggerLines: 1
+				},
+				categories : $!catalogs
+			},
+			yAxis : {
+				title : {
+					text : '访问次数'
+				},
+				plotLines : [ {
+					value : 100,
+					width : 1,
+					color : '#808080'
+				} ]
+			},
+			tooltip : {
+				formatter : function() {
+					return '<b>' + this.series.name + '</b><br/>'
+							+ this.x + ': ' + this.y;
+				}
+			},
+			legend : {
+				layout : 'vertical',
+				align : 'right',
+				verticalAlign : 'top',
+				x : 0,
+				y : 100,
+				borderWidth : 0
+			},
+			series : [
+				{name : '访问次数',data : $!datas }
+			]
+		};
+		$(function(){
+			new Highcharts.Chart(options);
+		});
+	</script>
+</head>
+  
+  <body>
+	<div id="container" style="min-width: 400px; margin: 50px 0 0 0"></div>
+  </body>
+</html>

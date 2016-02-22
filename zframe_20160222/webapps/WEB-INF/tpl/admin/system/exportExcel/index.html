@@ -1,0 +1,178 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>导出Excel</title>
+</head>
+ <body>
+ <script type="text/javascript">
+ 	var winExportExcel = new Windows("sys_export_excel");
+ 	var winExportExcelParam = null;
+ 	$(function(){
+ 		//初始化传递来的数据
+ 		winExportExcelParam = winExportExcel.getParam();
+ 		winExportExcelParam = JSONObject.parseJSON(winExportExcelParam);
+ 		//显示所有列信息
+ 		var html = "";
+ 		var columns = winExportExcelParam.columns;
+ 		var showColumns = winExportExcelParam.showColumns.split(",");
+ 		var count = 1;
+ 		$.each(columns[0],function(id,title){
+ 			var showTitle = "<label>"+title+"</label>"; 
+ 			var strCheckbox = "";
+ 			if(isShowColumn(showColumns,id))
+ 				strCheckbox = "<input type='checkbox' name='exportColumn' title='"+title+"' value='"+id+"' checked='checked' style='vertical-align: middle;'/>"+showTitle;
+ 			else
+ 				strCheckbox = "<input type='checkbox' name='exportColumn' title='"+title+"' value='"+id+"' style='vertical-align: middle;'/>"+showTitle;
+ 			html += strCheckbox+"&nbsp;&nbsp;";
+ 			if(count > 0 && count % 5 == 0)
+ 				html += "<br />";
+ 			count ++;
+ 		});
+ 		winExportExcel.find("#exportColums").html(html);
+ 	});
+ 	function isShowColumn(columnArray,col){
+ 		for(var i=0;i<columnArray.length;i++){
+ 			if(col == columnArray[i]){
+ 				return true;
+ 			}
+ 		}
+ 		return false;
+ 	}
+ 	function exportTypeLoadSuccesss(){
+ 		var exportType = winExportExcelParam.exportType;
+ 		winExportExcel.find("#exportType").combobox("select",exportType);
+ 	}
+	function export_excel_ok(){
+  		var exportType = winExportExcel.find("#exportType").combo("getValue");
+  		//获取选中的列
+  		var checkColumns = winExportExcel.find("input[type='checkbox'][name='exportColumn']");
+  		var exportColumns = new Array();//选择导出的列
+  		var exportColumnTitles = new Array();
+		for(var i=0;i<checkColumns.length;i++){
+			var oCheckbox = checkColumns[i];
+			if(oCheckbox.checked){
+				exportColumns.push(oCheckbox.value);
+				exportColumnTitles.push(oCheckbox.title);
+			}
+		}
+		if(exportColumns.length==0){
+			top.Notiy.warning("未选中导出列，无法导出!");
+			return ;
+		}
+		//获取实体类名称
+		var entityClass = winExportExcelParam.entityClass;
+		if($.trim(entityClass).length==0){
+			top.Notiy.error("未设置entityClass，无法导出!");
+			return ;
+		}
+		//导出的文件名
+		var exportName = winExportExcel.find("#exportName").val();
+		//是否打包
+		var ifCompress = winExportExcel.find("#ifCompress").attr("checked");
+		if(ifCompress){
+			ifCompress = true;
+		}else{
+			ifCompress = false;
+		}
+  		//判断导出类型
+		if(exportType == "all"){//如果是导出全部
+			top.Dialog.progress();
+			$.post("$!basePath/admin/exportExcel/doExportExcelAll",{"entityClass":entityClass,"columns":exportColumns.toString(),"titles":exportColumnTitles.toString(),"fileName":exportName,"ifCompress":ifCompress},function(data){
+				export_excel_callback(data);
+				top.Dialog.progress("close");
+			},"json");
+		}else if(exportType == "page"){
+			top.Dialog.progress();
+			var pageNo = winExportExcelParam.pager[0].pageNo;
+			var pageSize = winExportExcelParam.pager[0].pageSize;
+			$.post("$!basePath/admin/exportExcel/doExportExcelPage",{"entityClass":entityClass,"columns":exportColumns.toString(),"titles":exportColumnTitles.toString(),"fileName":exportName,"ifCompress":ifCompress,"pageNo":pageNo,"pageSize":pageSize},function(data){
+				export_excel_callback(data);
+				top.Dialog.progress("close");
+			},"json");
+		}else if(exportType == "selected"){
+			var selectedIds = winExportExcelParam.selectedIds;
+			if(selectedIds){
+				top.Dialog.progress();
+				$.post("$!basePath/admin/exportExcel/doExportExcelSelected",{"entityClass":entityClass,"columns":exportColumns.toString(),"titles":exportColumnTitles.toString(),"fileName":exportName,"ifCompress":ifCompress,"ids":selectedIds},function(data){
+					export_excel_callback(data);
+					top.Dialog.progress("close");
+				},"json");
+			}else{
+				top.Notiy.warning("您未选中要导出的行!");
+			}
+		}
+  	}
+  	function export_excel_callback(data){
+  		if(data.isExported){
+			winExportExcel.find("#excelFileName").val(data.fileName);
+			winExportExcel.find("#excelIfCompress").val(data.ifCompress);
+			winExportExcel.find("#downExcelForm").submit();
+			top.Notiy.success("导出成功!");
+			winExportExcel.close();
+		}else{
+			top.Dialog.error(data.error);
+		}
+  	}
+  	function export_excel_cancel(){
+  		//清空数据
+  		winExportExcel.setParam("");
+  		winExportExcel.close();
+  	}
+ </script>
+ <div class="easyui-layout" data-options="fit:true">
+	 <div data-options="region:'center',border:false">
+	 	<table width="100%" border="0" style="padding-left:20px;padding-top:20px;line-height: 30px;">
+	 		<tr>
+	 			<td width="20%">
+	 				<label for="exportType">导出类型：</label>
+	 			</td>
+	 			<td>
+		 			<select id="exportType" class="easyui-combobox" style="width:200px;" data-options="editable:false,onLoadSuccess:exportTypeLoadSuccesss">
+		 				<option value="all" selected="selected">导出全部</option>
+		 				<option value="page">导出当前页</option>
+		 				<option value="selected">导出选中</option>
+		 			</select>&nbsp;
+		 			<input type="checkbox" id="ifCompress" style="vertical-align: middle;"/>打包
+	 			</td>
+	 		</tr>
+	 		<tr style="display:none;">
+	 			<td>
+	 				<label for="pageSize">分页大小：</label>
+	 			</td>
+	 			<td>
+	 				<input type="text" id="pageSize" class="easyui-validatebox" style="width:50px;"/><label>&nbsp;防止导出文件过大无法打开的情况</label>
+	 			</td>
+	 		</tr>
+	 		<tr>
+	 			<td>
+	 				<label for="exportName">文件名称：</label>
+	 			</td>
+	 			<td>
+	 				<input type="text" id="exportName" class="easyui-validatebox" style="width:187px;"/><label>&nbsp;可不填,默认为当前日期</label>
+	 			</td>
+	 		</tr>
+	 		<tr>
+	 			<td>
+	 				&nbsp;&nbsp;&nbsp;<label for="exportColums">选择列：</label>
+	 			</td>
+	 			<td id="exportColums">
+	 				
+	 			</td>
+	 		</tr>
+	 	</table>
+	 	<form id="downExcelForm" action="$!basePath/admin/exportExcel/download" method="post">
+	 		<input type="hidden" name="fileName" id="excelFileName"/>
+	 		<input type="hidden" name="ifCompress" id="excelIfCompress"/>
+	 	</form>
+	 </div>
+	 <!--Change Button Text-->
+	 <div data-options="region:'south',border:false">
+	 	<div class="dialog-button">
+			<a id="ok" class="easyui-linkbutton" data-options="iconCls:'icon-ok'" href="javascript:void(0)" onclick="export_excel_ok()">确定</a>
+			<a id="cancel" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" href="javascript:void(0)" onclick="export_excel_cancel()">取消</a>
+		</div>
+	</div>
+ </div>
+  </body>
+</html>

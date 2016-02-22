@@ -1,0 +1,100 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>index.html</title>
+	#style
+</head>
+ <body>
+ <script type="text/javascript">
+	$(function(){
+	    initDataGrid();
+	});
+	function initDataGrid(){
+		$("#dgAppInfo").datagrid({
+			title:'应用信息',
+			iconCls:'icon-application',
+			autoRowHeight: false,
+			url:'$!basePath/admin/server/app',
+			border:true,
+			idField:'id',
+			singleSelect:true,
+			collapsible:true,
+			columns:[[
+				{field:'id',hidden:true},
+				{field:'name',title:'项',width:200,align:'right'},
+				{field:'value',title:'值',width:220,align:'left'}
+			]],
+			rownumbers:false
+		});
+		$("#dgDBInfo").datagrid({
+			title:'数据库信息',
+			iconCls:'icon-database',
+			autoRowHeight: false,
+			url:'$!basePath/admin/server/db',
+			border:true,
+			idField:'id',
+			singleSelect:true,
+			collapsible:true,
+			columns:[[
+				{field:'id',hidden:true},
+				{field:'name',title:'项',width:200,align:'right'},
+				{field:'value',title:'值',width:220,align:'left'}
+			]],
+			rownumbers:false
+		});
+		$("#dgServerInfo").datagrid({
+			title:'服务器信息',
+			iconCls:'icon-server',
+			autoRowHeight: false,
+			url:'$!basePath/admin/server/server',
+			border:true,
+			idField:'id',
+			singleSelect:true,
+			collapsible:true,
+			columns:[[
+				{field:'id',hidden:true},
+				{field:'name',title:'项',width:200,align:'right'},
+				{field:'value',title:'值',width:220,align:'left'}
+			]],
+			rownumbers:false
+		});
+		$("#dgLicenseInfo").datagrid({
+			title:'授权信息',
+			iconCls:'icon-key',
+			autoRowHeight: false,
+			url:'$!basePath/admin/server/license',
+			border:true,
+			idField:'id',
+			singleSelect:true,
+			collapsible:true,
+			columns:[[
+				{field:'id',hidden:true},
+				{field:'name',title:'项',width:200,align:'right'},
+				{field:'value',title:'值',width:220,align:'left'}
+			]],
+			rownumbers:false
+		});
+	}
+ </script>
+	<table width="100%" border="0">
+		<tr>
+			<td width="50%" style="vertical-align: top;">
+				<table id="dgAppInfo"></table>
+			</td>
+			<td width="50%" style="vertical-align: top;">
+				<table id="dgDBInfo"></table>
+			</td>
+		</tr>
+		<tr>
+			<td width="50%" style="vertical-align: top;">
+				<table id="dgServerInfo"></table>
+			</td>
+			<td width="50%" style="vertical-align: top;">
+				<table id="dgLicenseInfo"></table>
+			</td>
+		</tr>
+	</table>
+    <!--Tools And ContextMenu-->
+  </body>
+</html>

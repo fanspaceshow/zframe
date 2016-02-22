@@ -1,0 +1,348 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>用户管理</title>
+	#style
+	<!-- 监听键盘事件 -->
+	<script type="text/javascript" src="$!basePath/framework/js/core/plugin/zframe.keyboard.js"></script> 
+</head>
+<body id="userLayout" class="easyui-layout">
+	<script type="text/javascript">
+		var winAdd = new Windows("user_add");
+		var winEdit = new Windows("user_edit");
+		var win_Unitadd = new Windows("unit_add");
+		var win_Unitedit = new Windows("unit_edit");
+		$(function(){
+			initDataGrid();//初始化表格
+			initWindows();//初始化要打开的窗口
+			initToolbar();//初始化工具条
+			//设置键盘监听控件参数
+			KeyBoard.GridName = "dgUserList";
+			KeyBoard.Ctrl = true;
+			KeyBoard.Shift = true;
+			KeyBoard.Init();
+			//introJs().start();
+		});
+		function initWindows(){
+			winAdd.windows({
+				title:"新增用户",
+				width:600,
+				height:415,
+				modal:true,
+				closed:true,
+				iconCls:'icon-user-add',
+				href:"${basePath}/admin/user/add",
+				onClose:function(){
+					if(winAdd.getReturnValue()=="true"){
+						$('#dgUserList').datagrid("reload");
+					}
+				}
+			});
+			winEdit.windows({
+				title:"编辑用户",
+				width:600,
+				height:415,
+				modal:true,
+				closed:true,
+				iconCls:'icon-user-edit',
+				href:"$!basePath/admin/user/edit",
+				onClose:function(){
+					if(winEdit.getReturnValue()=="true"){
+						$('#dgUserList').datagrid("reload");
+					}
+				}
+			});
+			win_Unitadd.windows({
+				title:'新增部门',
+				width:350,
+				height:350,
+				modal:true,
+				closed:true,
+				iconCls:'icon-unit-add',
+				href:"$!basePath/admin/unit/add",
+				proxy:false,
+				onClose:function(){
+					if(win_Unitadd.getReturnValue()=="true"){
+						var node = $("#unitTree").tree("getSelected");
+						$("#unitTree").tree("reload");
+					}
+				}
+			});
+			win_Unitedit.windows({
+				title:"编辑部门",
+				width:350,
+				height:400,
+				modal:true,
+				closed:true,
+				iconCls:'icon-unit-edit',
+				href:"$!basePath/admin/unit/edit",
+				onClose:function(){
+					if(win_Unitedit.getReturnValue()=="true"){
+						var node = $("#unitTree").tree("getSelected");
+						$("#unitTree").tree("reload");
+					}
+				}
+			});
+		}
+		//初始化表格
+		function initDataGrid(){
+			$('#dgUserList').datagrid({
+				autoRowHeight: false,
+				collapsible:true,
+				url:'$!basePath/admin/user/userList',
+				sortName: 'id',
+				sortOrder: 'asc',
+				remoteSort: true,
+				border:false,
+				fit:true,
+				idField:'id',
+				singleSelect:false,
+				frozenColumns:[[
+	                {field:'ck',checkbox:true},
+	                {title:'序号',field:'id',width:40,sortable:true}
+				]],
+				columns:[[
+					
+					{field:'realName',title:'姓名',width:80,formatter:function(value,row,index){
+							return highShowSearch($("#dgUserList"),"realName",value);
+					}},
+					{field:'loginName',title:'用户名',width:120,sortable:true,
+						sorter:function(a,b){
+							return (a>b?1:-1);
+						},formatter:function(value,row,index){
+							return DataGridUtil.HighShowSearch($("#dgUserList"),"loginName",value);
+						}
+					},
+					{field:'mobile',title:'手机号码',width:120},
+					{field:'email',title:'电子邮箱',width:130,formatter:function(value,row,index){
+						if(value && value.length>0){
+							value = "<a href='mailto:"+value+"'>"+value+"</a>";
+						}
+						return value;
+					}},
+					{field:'address',title:'地址',width:180},
+					{field:'enabled',title:'状态',width:50,formatter:function(value,row,index){
+						if(value=="0")
+							return "正常";
+						else if(value=="1")
+							return "<span style='color:red;'>锁定<span>";
+					}},
+					{field:'lastLoginTime',title:'最后登录时间',width:130}
+				]],
+				pagination:true,
+				rownumbers:true,
+				toolbar:'#dgUserList-toolbar',
+				onHeaderContextMenu: function(e,field){
+					e.preventDefault();
+					//创建表头右键菜单
+					DataGridUtil.createHeadContextMenu("dgUserList");
+					//显示表头右键菜单
+					DataGridUtil.showHeadContextMenu("dgUserList",e);
+				},
+				onRowContextMenu:function(e,rowindex,rowData){
+					rowContentMenuShowHandler(e,rowindex,rowData,"dgUserList","dgUserList_rowContextMenu");
+				},
+				onDblClickRow:function(rowindex,rowdata){
+					winEdit.windows({href:"$!basePath/admin/user/edit/"+rowdata.id});
+					winEdit.windows("open");
+				},
+				onLoadSuccess : function(){
+					
+					DataGridUtil.initDataGridColumn("dgUserList");
+				}
+			});
+		}
+		function initToolbar(){
+			$("#btnAdd").click(function(){
+				winAdd.open();
+			});
+			$("#btnEdit").click(function(){
+				var selectRows = $("#dgUserList").datagrid("getSelected");
+				if(!selectRows){
+					top.Notiy.warning("请选择要编辑的项");
+				}else{
+					winEdit.windows({href:"$!basePath/admin/user/edit/"+selectRows.id});
+					winEdit.windows("open");
+				}
+			});
+			$("#btnRemove").attr("deleteUrl","$!basePath/admin/user/doDelete");
+			$("#btnRemove").click(function(){
+				DataGridUtil.Delete("$!basePath/admin/user/doDelete","dgUserList");
+			});
+			$("#btnExportExcel").click(function(){
+				DataGridUtil.exportExcel($("#dgUserList"),"User");
+			});
+			$("#btnLock").click(function(){
+				lockOrUnlock(0,this);
+			});
+			$("#btnUnLock").click(function(){
+				lockOrUnlock(1,this);
+			});
+		}
+		function lockOrUnlock(type,obj){
+			var selectRows = $("#dgUserList").datagrid("getSelections");
+			var tag = "锁定";
+			if(type == 1){
+				tag = "解锁";
+			}
+			if(selectRows.length == 0){
+				top.Notiy.warning("请选择要"+tag+"的用户!");
+				return ;
+			}
+			var ids = new Array();
+			$.each(selectRows,function(index,row){
+				ids.push(row.id);
+			});
+			$(obj).linkbutton("loading");
+			$.post("$!basePath/admin/user/lock",{"type":type,"ids":ids.toString()},function(data){
+				$(obj).linkbutton("reset");
+				var r = data.isLocked;
+				if(type == 1)
+					r = data.isUnLocked;
+				if(r){
+					top.Notiy.success(tag+"成功!");
+					//更新表格显示，采用js更新
+					$.each(selectRows,function(index,row){
+						var oIndex = $("#dgUserList").datagrid("getRowIndex",row);
+						$("#dgUserList").datagrid("updateRow",{
+							index:oIndex,
+							row:{
+								enabled:type==0?1:0
+							}
+						});
+					});
+				}else{
+					top.Dialog.error(data.error);
+				}
+			},"json");
+		}
+		//右键菜单中修改的触发事件
+		function doEditForContentMenu_btnEdit(id){
+			winEdit.windows({href:"$!basePath/admin/user/edit/"+id});
+			winEdit.windows("open");
+		}
+		function rowContentMenuClickHandler(item){
+			ContentMenuClickHandler("dgUserList",item);
+		}
+		function doSearch(v,n){
+			doDataGridSearch("dgUserList",n,v);
+		}
+		function unitTree_OnSelect(node){
+			$("#dgUserList").datagrid({
+				url:'$!basePath/admin/user/unitUserListForUnit',
+				queryParams:{
+					unitId:node.id
+				}
+			});
+		}
+		//自定义右键菜单事件
+		function lock_onClick(param){
+			$.post("$!basePath/admin/user/lock",{"type":0,"ids":param.rowid},function(data){
+				if(data.isLocked){
+					top.Notiy.success("锁定成功!");
+					//更新表格显示，采用js更新
+					var oIndex = $("#dgUserList").datagrid("getRowIndex",param.rowid);
+					$("#dgUserList").datagrid("updateRow",{
+						index:oIndex,
+						row:{
+							enabled:1
+						}
+					});
+				}else{
+					top.Dialog.error(data.error);
+				}
+			},"json");
+		}
+		function lockSelected_onClick(param){
+			lockOrUnlock(0);
+		}
+		function unLock_onClick(param){
+			$.post("$!basePath/admin/user/lock",{"type":1,"ids":param.rowid},function(data){
+				if(data.isUnLocked){
+					top.Notiy.success("解锁成功!");
+					//更新表格显示，采用js更新
+					var oIndex = $("#dgUserList").datagrid("getRowIndex",param.rowid);
+					$("#dgUserList").datagrid("updateRow",{
+						index:oIndex,
+						row:{
+							enabled:0
+						}
+					});
+				}else{
+					top.Dialog.error(data.error);
+				}
+			},"json");
+		}
+		function unLockSelected_onClick(param){
+			lockOrUnlock(1);
+		}
+		function editUnit(){
+			var node = $("#unitTree").tree("getSelected");
+			if(node){
+				win_Unitedit.windows({href:"$!basePath/admin/unit/edit/"+node.id});
+				win_Unitedit.windows("open");
+			}else{
+				top.Notiy.warning("请选择要编辑的部门！");
+			}
+		}
+		</script>
+	<div data-options="region:'west',split:false,border:false" style="width:200px;padding-right:1px;">
+		<div class="easyui-panel" data-options="title:'部门列表',fit:true,tools:[{iconCls:'icon-unit-add',handler:function(){win_Unitadd.open();}},{iconCls:'icon-unit-edit',handler:editUnit}]" style="padding-left:5px;">
+			<ul id="unitTree" class="easyui-tree" data-options="url:'$!basePath/admin/unit/unitListForUser',animate:true,onSelect:unitTree_OnSelect"></ul>
+		</div>
+	</div>
+	<div id="centerDiv" data-options="region:'center'">
+		<table id="dgUserList"></table>
+    </div>
+    <!-- 工具条 -->
+    <div id="dgUserList-toolbar" style="padding:2px 0;" class="datagrid-toolbar">
+		<table cellpadding="0" cellspacing="0" style="width:100%">
+			<tr>
+				<td style="padding-left:2px">
+					<a id="btnAdd" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-user-add',plain:true" style="float: left;">新增</a>
+					<a id="btnEdit" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-user-edit',plain:true" style="float: left;">修改</a>
+					<a id="btnRemove" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-user-delete',plain:true" style="float: left;">删除</a>
+					<a id="btnLock" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-user-lock',plain:true" style="float: left;">锁定</a>
+					<a id="btnUnLock" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-user-unlock',plain:true" style="float: left;">解锁</a>
+					<div class="datagrid-btn-separator"></div>
+					<a id="btnExportExcel" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-export-excel',plain:true" style="float: left;">导出Excel</a>
+				</td>
+				<td style="text-align:right;padding-right:2px">
+					<input id="ss" style="width:240px;" class="easyui-searchbox" data-options="searcher:doSearch,prompt:'请输入查询内容',menu:'#ss_mm'"></input>
+					<div id="ss_mm" style="width:80px;">
+						<div data-options="name:'id'">序号</div>
+						<div data-options="name:'loginName'">员工号</div>
+						<div data-options="name:'realName'">姓名</div>
+					</div>
+				</td>
+			</tr>
+		</table>
+	</div>
+	<div id="dgUserList_rowContextMenu" data-options="onClick:rowContentMenuClickHandler" class="easyui-menu" style="width:120px;">
+		<div name="select" data-options="iconCls:'icon-ok'">选中</div>
+		<div name="edit" data-options="iconCls:'icon-user-edit'" with="btnEdit">修改</div>
+		<div data-options="iconCls:'icon-user-lock'" with="btnRemove">
+			<span>删除用户</span>
+			<div style="width:120px;">
+				<div name="remove" data-options="iconCls:'icon-user-lock'" >删除此用户</div>
+				<div name="removeSelected" data-options="iconCls:'icon-user-lock'">删除选中用户</div>
+			</div>
+		</div>
+		<div data-options="iconCls:'icon-user-lock'" with="btnLock">
+			<span>锁定用户</span>
+			<div style="width:120px;">
+				<div name="lock" data-options="iconCls:'icon-user-lock'">锁定此用户</div>
+				<div name="lockSelected" data-options="iconCls:'icon-user-lock'">锁定选中用户</div>
+			</div>
+		</div>
+		<div data-options="iconCls:'icon-user-lock'" with="btnUnLock">
+			<span>解锁用户</span>
+			<div style="width:120px;">
+				<div name="unLock" data-options="iconCls:'icon-user-lock'">解锁此用户</div>
+				<div name="unLockSelected" data-options="iconCls:'icon-user-lock'">解锁选中用户</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

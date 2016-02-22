@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xsi:schemaLocation="
+    http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+    http://www.springframework.org/schema/context
+    http://www.springframework.org/schema/context/spring-context-3.1.xsd
+    http://www.springframework.org/schema/mvc
+    http://www.springframework.org/schema/mvc/spring-mvc-3.1.xsd">
+	<!-- 对所有的实体类进行扫描，完成Bean的创建和自动依赖注入的功能 -->
+	<context:component-scan base-package="org.zframework">
+		<context:exclude-filter type="annotation"
+			expression="org.springframework.stereotype.Service" />
+	</context:component-scan>
+	<!-- 启动Spring MVC的注解功能 完成请求和注解POJO的映射 -->
+	<bean class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter">
+		<property name="messageConverters">
+			<list>
+				<!-- 输出纯文本 -->
+				<bean class="org.springframework.http.converter.StringHttpMessageConverter">
+					<property name="supportedMediaTypes">
+						<list>
+							<value>text/html;charset=UTF-8</value>
+						</list>
+					</property>
+				</bean>
+				<!-- 输出JSON -->
+				<bean class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter">
+					<property name="objectMapper">
+					    <bean class="org.zframework.core.web.msgconverter.json.JSONObjectMapper"/>
+					</property>
+					<property name="supportedMediaTypes">
+						<list>
+							<value>text/plain;charset=UTF-8</value>
+						</list>
+					</property>
+				</bean>
+			</list>
+		</property>
+		<property name="customArgumentResolver">
+			<bean class="org.zframework.core.web.resolver.BeanArgumentResolver" />
+		</property>
+		<!-- 定义全局属性编辑器 -->
+		<property name="webBindingInitializer">
+			<bean class="org.springframework.web.bind.support.ConfigurableWebBindingInitializer">
+				<!-- 定义ConversionService -->
+				<property name="conversionService" ref="conversionService" />
+				<!-- 定义Bean验证 -->
+				<property name="validator" ref="validator"/>
+			</bean>
+		</property>
+	</bean>
+	<bean class="org.springframework.web.servlet.mvc.annotation.DefaultAnnotationHandlerMapping" >
+		<property name="interceptors">
+			<list>
+				<bean class="org.zframework.core.web.filter.UserInterceptor"/>
+				<bean class="org.zframework.core.web.filter.AdminInterceptor"/>
+				<bean class="org.zframework.core.web.filter.URLInterceptor"/>
+				<bean class="org.zframework.core.web.filter.SQLInterceptor"/>
+				<bean class="org.zframework.core.web.filter.ParamInitInterceptor"/>
+			</list>
+		</property>
+	</bean>
+	<!-- ConversionService -->
+	<bean id="conversionService" class="org.springframework.context.support.ConversionServiceFactoryBean"/>
+	<!-- 启用表单验证 -->
+	<bean id="validator" class="org.springframework.validation.beanvalidation.LocalValidatorFactoryBean" />
+	<!-- 静态资源的访问 -->
+	<mvc:resources location="/resources/framework/" mapping="/framework/**"/>
+	<mvc:resources location="/resources/application/" mapping="/app/**"/>
+	<mvc:resources location="/resources/upload/" mapping="/dl/**"/>
+	<context:annotation-config />
+	<!-- 集成Velocity -->
+	<bean id="velocityConfigurer"
+		class="org.springframework.web.servlet.view.velocity.VelocityConfigurer">
+		<property name="resourceLoaderPath">
+			<value>WEB-INF/tpl/</value>
+		</property>
+		<property name="velocityProperties">
+			<props>
+				<prop key="input.encoding">utf-8</prop>
+				<prop key="output.encoding">utf-8</prop>
+				<prop key="foreach.count">loopCounter</prop>
+				<prop key="directive.foreach.counter.initial.value">1</prop>
+				<prop key="velocimacro.library">globals/tpl_library.html</prop>
+			</props>
+		</property>
+	</bean>
+	<bean id="viewResolver"
+		class="org.springframework.web.servlet.view.velocity.VelocityViewResolver">
+		<property name="cache" value="false" />
+		<property name="suffix" value=".html" />
+		<!-- 如果你需要使用Spring 对 Velocity宏命令的支持, 将这个属性设为true  -->
+		<property name="exposeSpringMacroHelpers" value="true" />
+		<property name="contentType" value="text/html;charset=UTF-8" />
+		<!--Velocity绑定表单 -->
+		<property name="exposeRequestAttributes" value="true" />
+		<property name="exposeSessionAttributes" value="true" />
+		<property name="dateToolAttribute" value="dateTool" />
+    	<property name="numberToolAttribute" value="numberTool" /> 
+	</bean>
+	<!-- 处理异常 -->
+	<bean class="org.zframework.core.web.resolver.ExceptionResolver"></bean>
+</beans>

@@ -1,0 +1,29 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>选择图标</title>
+</head>
+ <body>
+ <script type="text/javascript">
+ 		var windowSelIcon = new Windows("SelIcon");
+ 		$(function(){
+	 		windowSelIcon.find(".easyui-linkbutton").bind("click",function(){
+	 			var iconCls = $(this).linkbutton("options").iconCls;
+	 			var jResult = new JSONObject();
+	 			jResult.put("success", true);
+	 			jResult.put("iconCls",iconCls);
+	 			windowSelIcon.setReturnValue(jResult.toString());
+	 			windowSelIcon.close();
+	 		});
+ 		});
+ </script>
+ <div class="easyui-layout" data-options="fit:true">
+	 <div data-options="region:'center',border:false">
+		#foreach($!icon in $list)
+		<a href="javascript:void(0)" style="margin-left:2px;margin-top:2px;" class="easyui-linkbutton" title="$!icon" data-options="iconCls:'$!icon',plain:true"></a>
+		#end
+	 </div>
+ </div>
+  </body>
+</html>

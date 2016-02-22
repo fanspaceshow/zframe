@@ -1,0 +1,98 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>index.html</title>
+	#style
+	<script type="text/javascript">
+		function save(){
+			top.Notiy.success("已保存！");
+		}
+	</script>
+</head>
+ <body class="easyui-layout">
+    <div data-options="region:'center',border:false">
+    	<form action="" method="post">
+    		<div class="easyui-tabs">   
+			    <div title="邮件" data-options="iconCls:'icon-email'" style="padding:10px;">   
+			        <center>
+			    		<table width="80%">
+			    			<tr>
+			    				<td width="80px;" style="padding-right:20px;" align="right">收件方式:</td>
+			    				<td><select class="easyui-combobox" data-options="width:'100'">
+			    					<option>POP3</option>
+			    					<option>IMAP</option>
+			    				</select></td>
+			    			</tr>
+			    			<tr>
+			    				<td width="80px;" style="padding-right:20px;" align="right">地址:</td>
+			    				<td><input type="text" class="easyui-validatebox" name="email_r_url" style="width:200px;"/></td>
+			    			</tr>
+			    			<tr>
+			    				<td width="80px;" style="padding-right:20px;" align="right">端口:</td>
+			    				<td><input type="text" class="easyui-numberbox" name="email_r_port"/></td>
+			    			</tr>
+			    			<tr>
+			    				<td width="80px;" style="padding-right:20px;" align="right">用户名:</td>
+			    				<td><input type="text" class="easyui-validatebox" name="email_r_username" style="width:200px;"/></td>
+			    			</tr>
+			    			<tr>
+			    				<td width="80px;" style="padding-right:20px;" align="right">密码:</td>
+			    				<td><input type="password" class="easyui-validatebox" name="email_r_password" style="width:200px;"/></td>
+			    			</tr>
+			    		</table>
+			    		<hr style="border: solid 1px #d4d4d4;"/>
+			    		<table width="80%">
+			    			<tr>
+			    				<td width="80px;" style="padding-right:20px;" align="right">发送方式:</td>
+			    				<td><select class="easyui-combobox" data-options="width:'100'">
+			    					<option>SMTP</option>
+			    					<option>Exchange</option>
+			    				</select></td>
+			    			</tr>
+			    			<tr>
+			    				<td width="80px;" style="padding-right:20px;" align="right">地址:</td>
+			    				<td><input type="text" class="easyui-validatebox" name="email_s_url" style="width:200px;"/></td>
+			    			</tr>
+			    			<tr>
+			    				<td width="80px;" style="padding-right:20px;" align="right">端口:</td>
+			    				<td><input type="text" class="easyui-numberbox" name="email_s_port"/></td>
+			    			</tr>
+			    			<tr>
+			    				<td width="80px;" style="padding-right:20px;" align="right">用户名:</td>
+			    				<td><input type="text" class="easyui-validatebox" name="email_s_username" style="width:200px;"/></td>
+			    			</tr>
+			    			<tr>
+			    				<td width="80px;" style="padding-right:20px;" align="right">密码:</td>
+			    				<td><input type="password" class="easyui-validatebox" name="email_s_password" style="width:200px;"/></td>
+			    			</tr>
+			    		</table>
+		    		</center>   
+			    </div>   
+			    <div title="分页" data-options="iconCls:'icon-application'" style="padding:10px;">
+			    	<center>
+			    		<table width="80%">
+			    			<tr>
+			    				<td width="80px;" style="padding-right:20px;" align="right">分页大小:</td>
+			    				<td><select class="easyui-combobox" data-options="width:'100'">
+			    					<option value="10">10</option>
+			    					<option value="15">15</option>
+			    					<option value="20">20</option>
+			    					<option value="30">30</option>
+			    					<option value="40">40</option>
+			    					<option value="50">50</option>
+			    				</select></td>
+			    			</tr>
+			    		</table>
+	    			</center>
+			    </div>   
+			</div>
+    	</form>
+    </div>
+    <div data-options="region:'south',border:false">
+		<div class="dialog-button" style="text-align: center !important;">
+			<a id="ok" class="easyui-linkbutton" data-options="iconCls:'icon-save'" href="javascript:void(0)" onclick="save()">保存</a>
+		</div>
+	</div>
+  </body>
+</html>

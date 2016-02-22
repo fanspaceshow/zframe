@@ -1,0 +1,258 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>res_edit.html</title>
+</head>
+ <body>
+ <script type="text/javascript">
+ 	var winRoleAssignRes = new Windows("role_assign_resource");
+ 	var oRoleAssignRes = {
+ 		lastSelectId : null,
+ 		isChanged : false,
+ 		isInitBtn : true,
+ 		isInitedRes : false,//表示资源是否已经加载并设置完毕
+ 		roleResIds : '$!roleResBtns',
+ 		objRoleResIds : new JSONObject(),
+ 		initForm : function(){
+ 			
+ 		},
+ 		initDataGrid : function(){
+ 			winRoleAssignRes.find("#tgRoleResourceList").treegrid({
+ 				title:'资源列表',
+ 				iconCls:'icon-res',
+				autoRowHeight: false,
+				url:'$!basePath/admin/role/roleResource/$!role.id',
+				border:false,
+				fit:true,
+				idField:'id',
+				nowrap:false,
+				treeField:'name',
+				animate:true,
+				singleSelect:false,
+				checkOnSelect:false,
+				selectOnCheck:false,
+				frozenColumns:[[
+	                {field:'id',width:40,checkbox:true}
+				]],
+				columns:[[			
+					{field:'name',title:'资源名称',width:120,sortable:true
+						,formatter:function(value,row,index){
+							return highShowSearch(winRoleAssignRes.find("#tgRoleResourceList"),"name",value);
+						}
+					},
+					{field:'buttons',title:'按钮权限',width:300,formatter:function(value,row,index){
+							var val = "";
+							for(var i=0;i<value.length;i++){
+								var btn = value[i];
+								val += "<span class=\""+btn.icon+"\" style=\"padding-left:20px;padding-top:2px;\">"+btn.name+"</span>&nbsp;";
+							}
+							return val;
+					}}
+				]],
+				rownumbers:true,
+				onLoadSuccess:function(){
+					var oRoleResIds = JSONObject.parseJSON(oRoleAssignRes.roleResIds);
+			 		if(oRoleResIds.length>0){
+			 			$.each(oRoleResIds,function(i,v){
+			 				winRoleAssignRes.find("#tgRoleResourceList").treegrid("checkRow",v.resId);
+			 			});
+			 		}
+			 		oRoleAssignRes.isInitedRes = true;
+				},
+				onSelect:function(row){
+					if(oRoleAssignRes.lastSelectId){
+						winRoleAssignRes.find("#tgRoleResourceList").treegrid("unselectRow",oRoleAssignRes.lastSelectId);
+					}
+					oRoleAssignRes.lastSelectId = row.id;
+					oRoleAssignRes.isInitBtn = true;//标识为初始化按钮
+					winRoleAssignRes.find("#dgResourceBtnList").datagrid("load",{"resId":row.id});
+				},
+				onClickRow:function(row){
+					oRoleAssignRes.isChanged = true;
+				},
+				onCheck:function(row){
+					if(oRoleAssignRes.isInitedRes){
+						oRoleAssignRes.isChanged = true;
+					}
+				},
+				onUncheck:function(row){
+					if(oRoleAssignRes.isInitedRes){
+						oRoleAssignRes.isChanged = true;
+					}
+				}
+			});
+			winRoleAssignRes.find("#dgResourceBtnList").datagrid({
+ 				title:'资源按钮',
+ 				iconCls:'icon-button-add',
+ 				autoRowHeight: false,
+				url:'$!basePath/admin/res/resourceButtonsForRole',
+				border:false,
+				fit:true,
+				idField:'id',
+				animate:true,
+				singleSelect:false,
+				frozenColumns:[[
+	                {field:'id',checkbox:true}
+				]],
+				columns:[[	
+					{field:'icon',title:'图标',width:40,formatter:function(value,row,index){
+						value = "<center><span style='padding-top:2px' class='"+value+"'\>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></center>"
+						return value;
+					}},		
+					{field:'name',title:'按钮名称',width:110,sortable:true}
+				]],
+				rownumbers:true,
+				onLoadSuccess:function(){
+					if(oRoleAssignRes.lastSelectId){
+						var btnIds = oRoleAssignRes.objRoleResIds.get(oRoleAssignRes.lastSelectId);
+						winRoleAssignRes.find("#dgResourceBtnList").datagrid("unselectAll");
+						if(btnIds){
+							$.each(btnIds,function(i,v){
+								winRoleAssignRes.find("#dgResourceBtnList").datagrid("selectRecord",v);
+							});
+						}
+						oRoleAssignRes.isInitBtn = false;
+					}
+				},
+				onSelectAll:function(rows){
+					if(oRoleAssignRes.isInitBtn)
+						return;
+					oRoleAssignRes.doBtnSelectEvent();
+				},
+				onSelect:function(row){
+					if(oRoleAssignRes.isInitBtn)
+						return;
+					oRoleAssignRes.doBtnSelectEvent();
+				},
+				onUnselect:function(row){
+					if(oRoleAssignRes.isInitBtn)
+						return;
+					oRoleAssignRes.doBtnSelectEvent();
+				}
+	 		});
+ 		},
+ 		initToolbar : function(){
+ 			//重置
+	 		winRoleAssignRes.find("#btnReset").click(function(){
+	 			winRoleAssignRes.find("#tgRoleResourceList").treegrid("load","$!basePath/admin/res/resList");
+	 		});
+ 		},
+ 		doBtnSelectEvent : function(){//右边按钮选择列表变化时左边列表跟着变化
+ 			var selectRows = winRoleAssignRes.find("#dgResourceBtnList").datagrid("getSelections");
+			var btnArray = new Array();
+			$.each(selectRows,function(i,v){
+				btnArray.push(v.id);
+			});
+			oRoleAssignRes.objRoleResIds.put(oRoleAssignRes.lastSelectId, btnArray);
+	 		var buttons = new Array();
+			//更新左边表格中的按钮显示
+			$.each(selectRows,function(i,v){
+				var btn = new JSONObject();
+				btn.put("id", v.id);
+				btn.put("name",v.name);
+				btn.put("icon",v.icon);
+				
+				buttons.push(btn);
+			});
+			if(buttons.length>0){
+				winRoleAssignRes.find("#tgRoleResourceList").treegrid("update",{
+					id:oRoleAssignRes.lastSelectId,
+					row:{
+						buttons:eval("(["+buttons.toString()+"])")
+					}
+				});
+			}
+ 		},
+ 		doSave : function(){//保存已分配的资源
+ 			var ids = oRoleAssignRes.getSelectResIds();
+			ids = ids.replace("[", "").replace("]", "");
+			var roleid = $!role.id;
+			winRoleAssignRes.find("#ok").linkbutton("loading");
+			$.post("$!basePath/admin/role/doAssignResource",{roleid:roleid,res:ids},function(data){
+				winRoleAssignRes.find("#ok").linkbutton("reset");
+				if(data.success == true){
+					top.Notiy.success("分配资源成功!");
+					winRoleAssignRes.close();
+				}else{
+					top.Dialog.error(data.error);
+				}
+			},"json");
+ 		},
+ 		getSelectResIds : function(){
+ 			var checkboxs = winRoleAssignRes.find("#tgRoleResourceLayout").find("input[name='id'][type='checkbox']");
+	 		var selectRes_Ids = new JSONObject();
+	 		for(var i=0;i<checkboxs.length;i++){
+	 			var ck = checkboxs[i];
+	 			if(ck.checked){
+	 				if(oRoleAssignRes.objRoleResIds.containsKey(ck.value)){
+	 					var btns = oRoleAssignRes.objRoleResIds.get(ck.value);
+	 					selectRes_Ids.put(ck.value,btns);
+	 				}else{
+	 					selectRes_Ids.put(ck.value,"");
+	 				}
+	 			}else{
+	 				if(oRoleAssignRes.objRoleResIds.containsKey(ck.value)){
+	 					oRoleAssignRes.objRoleResIds.remove(ck.value);
+	 				}
+	 			}
+	 		}
+	 		return "["+selectRes_Ids.toString()+"]";
+ 		},
+ 		doSearch : function(v,n){
+ 			doTreeGridSearch("tgRoleResourceList","$!basePath/admin/res/resList",n,v);
+ 		},
+ 		ok : function(){
+ 			if(oRoleAssignRes.isChanged){
+				oRoleAssignRes.doSave(1);
+	 		}else{
+	 			winRoleAssignRes.close();
+	 			if(!oRoleAssignRes.lastSelectId)
+	 				top.Notiy.info("您未做任何修改!");
+	 		}
+ 		},
+ 		cancel : function(){
+ 			if(oRoleAssignRes.isChanged){
+		  		top.Dialog.confirm("提示","您已做出修改，是否保存?",function(r){
+			 			if(r){
+							oRoleAssignRes.doSave(1);
+						}else{
+							winRoleAssignRes.close();
+						}
+			 	});
+		 	}else{
+		 		winRoleAssignRes.close();
+		 	}
+ 		}
+ 	};
+ 	$(function(){
+ 		oRoleAssignRes.initDataGrid();
+ 		oRoleAssignRes.initToolbar();
+ 		//初始化用户的权限
+ 		var oRoleResIds = JSONObject.parseJSON(oRoleAssignRes.roleResIds);
+ 		if(oRoleResIds.length>0){
+ 			$.each(oRoleResIds,function(i,v){
+ 				oRoleAssignRes.objRoleResIds.put(v.resId, v.buttonIds);
+ 			});
+ 		}
+ 	});
+ </script>
+ <div class="easyui-layout" data-options="fit:true">
+ 	<!-- 左边待选资源菜单 -->
+	 <div data-options="region:'center',border:false" id="tgRoleResourceLayout" style="background:#fff;border-bottom:1px solid #ccc;">
+	 	<table id="tgRoleResourceList"></table>
+	 </div>
+	 <!-- 右边待选资源按钮 -->
+	 <div data-options="region:'east',border:false,split:true" style="width:220px;background:#fff;border-bottom:1px solid #ccc;">
+	 	<table id="dgResourceBtnList"></table>
+	 </div>
+	 <!--Change Button Text-->
+	 <div data-options="region:'south',border:false">
+	 	<div class="dialog-button">
+			<a id="ok" class="easyui-linkbutton" data-options="iconCls:'icon-ok'" href="javascript:void(0)" onclick="oRoleAssignRes.ok()">确定</a>
+			<a id="cancel" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" href="javascript:void(0)" onclick="oRoleAssignRes.cancel()">取消</a>
+		</div>
+	</div>
+ </div>
+  </body>
+</html>
