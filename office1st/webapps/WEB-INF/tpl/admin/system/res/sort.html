@@ -1,0 +1,161 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>res_edit.html</title>
+</head>
+ <body>
+	<style type="text/css">
+		.res-drag-item{
+			list-style-type:none;
+			display:block;
+			padding:3px;
+			border:1px solid #ccc;
+			margin:2px;
+			width:80%;
+		}
+		.res-drag-item span{
+			padding-left:20px;
+		}
+		.indicator{
+			position:absolute;
+			font-size:9px;
+			width:10px;
+			height:10px;
+			display:none;
+			color:red;
+		}
+	</style>
+ <script type="text/javascript">
+ 	var winResSort = new Windows("res_sort");
+ 	var oResSort = {
+ 		initDrap : function(){//初始化Drap
+ 			winResSort.find('.res-drag-item').draggable({
+				revert:true,
+				proxy:'clone'
+			}).droppable({
+				onDragOver:function(e,source){
+					oResSort.indicator.css({
+						display:'block',
+						top:$(this).position().top+$(this).outerHeight()+10
+					});
+				},
+				onDragLeave:function(e,source){
+					oResSort.indicator.hide();
+				},
+				onDrop:function(e,source){
+					$(source).insertBefore(this);
+					oResSort.indicator.hide();
+				}
+			});
+ 		},
+ 		initToolbar : function(){
+ 			winResSort.find("#btnSave").click(function(){
+	 			if(!$(this).linkbutton("options").disabled){
+	 				if(oResSort.isChanged()){
+	 					var jq = $(this);
+	 					jq.linkbutton("loading");
+		 				var pid = winResSort.find("#parentRes").combotree("getValue");
+		 				$.post("$!basePath/admin/res/doSort",{parentId:pid,ids:oResSort.getIds().toString()},function(data){
+		 					jq.linkbutton("reset");
+		 					if(data.success == true){
+		 						top.Notiy.success("排序成功,重新登陆后生效!");
+		 						oResSort.initIds();
+		 						winResSort.setReturnValue(true);
+		 					}else{
+		 						top.Dialog.error(data.error);
+		 					}
+		 				},"json");
+		 			}else{
+		 				top.Notiy.info("您未做任何更改!");
+		 			}
+	 			}
+	 		});
+ 		},
+ 		initIds : function(){//读取初始排序id顺序
+ 			oResSort.ids = oResSort.getIds();
+ 		},
+ 		getIds : function(){
+ 			var oIds = new Array();
+	 		var items = winResSort.find(".res-drag-item");
+	 		$.each(items,function(n,v){
+	 			oIds.push(v.id);
+	 		});
+	 		return oIds;
+ 		},
+ 		isChanged : function(){
+ 			var items = winResSort.find(".res-drag-item");
+	 		for(var i=0;i<oResSort.ids.length;i++){
+	 			if(oResSort.ids[i] != items[i].id)
+	 				return true;
+	 		}
+	 		return false;
+ 		},
+ 		changeParentRes : function(newVal,oldVal){
+ 			var oLoad = winResSort.find("#loading");
+	 		var childRes = winResSort.find("#childRes");
+	 		oLoad.show();
+	 		childRes.hide();
+	 		$.post("$!basePath/admin/res/childRes",{parentId:newVal},function(data){
+	 			var childResHtml = "";
+	 			if(data.length>0){
+	 				$.each(data,function(n,v){
+	 				childResHtml += "<li class=\"res-drag-item\" id=\""+v.id+"\"><span class=\""+v.icon+"\">"+v.name+"</span></li>"
+	 				childRes.html(childResHtml);
+	 				oResSort.initDrap();//重新渲染拖曳
+	 				oResSort.initIds();
+	 				winResSort.find("#btnSave").linkbutton("reset");
+	 			});
+	 			}else{
+	 				childRes.html("<li class=\"res-drag-item\">无下级资源</li>");
+	 				winResSort.find("#btnSave").linkbutton("loading");
+	 			}
+	 			oLoad.hide();
+	 			childRes.fadeIn();
+	 			
+	 		},"json");
+ 		},
+ 		ok : function(){
+ 			
+ 		},
+ 		cancel : function(){
+ 			winResSort.close();
+ 		},
+ 		indicator : null,
+ 		ids : null
+ 	};
+ 	$(function(){
+ 		oResSort.indicator = $('<div class="indicator"><img src="$!basePath/framework/images/icons/target_right.png"/></div>').appendTo('#sortLayout');
+ 		oResSort.initDrap();
+ 		oResSort.initToolbar();
+ 		oResSort.initIds();
+ 	});
+ </script>
+ <div class="easyui-layout" data-options="fit:true" id="sortLayout">
+ 	<div data-options="region:'north',border:false">
+ 		<div class="datagrid-toolbar" style="padding-bottom:5px;">
+	 		<span>上级资源：</span>
+	 		<select id="parentRes" class="easyui-combotree" data-options="url:'$!basePath/admin/res/resTree',animate:true,onChange:oResSort.changeParentRes" style="width:180px;">
+	 			<option selected="selected" value="0">无上级资源</option>
+	 		</select>
+	 		<a id="btnSave" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-save',plain:true">保存更改</a>
+ 		</div>
+ 	</div> 
+	<div data-options="region:'center',border:false">
+		<div id="loading" style="padding-top:3px;padding-left:5px;display:none;"><img src="$!basePath/framework/images/loading.gif"/></div>
+	 	<ul id="childRes" style="margin:0;padding:0;margin-left:5px;">
+	 		#foreach($res in $childRes)
+	 		<li class="res-drag-item" id="$!res.id"><span class="$!res.icon">$!res.name</span></li>
+	 		#end
+	 	</ul>
+	</div>
+	<!--Change Button Text-->
+	<div data-options="region:'south',border:false">
+		<div class="dialog-button">
+		<!-- <a id="ok" class="easyui-linkbutton" data-options="iconCls:'icon-ok'" href="javascript:void(0)" onclick="oResSort.ok()">确定</a> -->
+		<a id="cancel" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" href="javascript:void(0)" onclick="oResSort.cancel()">关闭</a>
+		</div>
+	</div>
+ </div>
+</body>
+</html>

@@ -1,0 +1,100 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<meta http-equiv="windows-Target" contect="_top">
+	<link rel="shortcut icon" type="image/x-icon" href="$!basePath/framework/images/favicon.ico" />
+	<title>系统首页</title>
+	#style_index
+	#intro
+	<script type="text/javascript" src="$!basePath/framework/js/common/zframe.index$!{layout}.js"></script>
+	<script type="text/javascript" src="$!basePath/framework/js/common/zframe.cookie.js"></script>
+	<style type="text/css">
+		ul{list-style-type:none;margin:0px; padding:5px;}
+		ul li{ padding:0px;}
+		ul li a{line-height:25px;padding-left:25px;padding-top:2px;color:#333;vertical-align: middle !important;}
+		a:link {
+		 text-decoration: none;
+		}
+		a:visited {
+		 text-decoration: none;
+		}
+		a:hover {
+		 text-decoration: none;
+		}
+		a:active {
+		 text-decoration: none;
+		}
+		#mainLayout_header a{
+			color:white;
+		}
+		#mainLayout_header span{
+			color:white;
+		}
+		.headertitle{
+			color:white;
+			float:left;
+			padding:10px;
+			padding-top:15px;
+		}
+	</style>
+</head>
+<body class="easyui-layout">
+	<div id="mainLayout_header" data-options="region:'north',border:false" class="indexHeader">
+		<div class="headertitle">
+			<!-- <img src="$!basePath/framework/images/headTitle.png" height="30"/> -->
+		</div>
+		<input type="hidden" id="basePath" value="$!basePath"/>
+		<a class="easyui-linkbutton" data-options="plain:true,disabled:true,iconCls:'icon-user'"><span id="username" style="font-weight: bold;">$!UserName</span></a>
+		<a id="btnToDesktop" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-assets-computer-go',plain:true" onclick="window.location.href='$!basePath/admin/desktop'">进入桌面版</a>
+		<a id="btnShowTip" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-tip',plain:true" onclick="introJs().start()">操作指引</a>
+		<a id="btnBackHome" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-home',plain:true" onclick="top.Home.BackHome()">返回桌面</a>
+		<a id="btnEditPass" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-key',plain:true" onclick="top.Home.ChangePwd()">修改密码</a>
+		<a id="btnThemes" href="javascript:void(0)" class="easyui-menubutton" data-options="menu:'#themeList',iconCls:'icon-themes'">更换皮肤</a>  
+		<div id="themeList" style="width:110px;" data-options="onClick:changeThemes">
+		    <div data-options="iconCls:'icon-ok'" themeName="default">默认皮肤</div>  
+		    <div data-options="" themeName="blue">Blue</div>
+		    <div data-options="" themeName="black">Black</div>
+		    <div data-options="" themeName="cupertino">Cupertino</div>
+		    <div data-options="" themeName="metro-blue">Metro-Blue</div>
+		    <div data-options="" themeName="metro-gray">Metro-Bray</div>
+		    <div data-options="" themeName="metro-green">Metro-Green</div>
+		    <div data-options="" themeName="metro-orange">Metro-Orange</div>
+		    <div data-options="" themeName="metro-red">Metro-Red</div>
+		</div>
+		<!-- <a id="btnLayout" href="javascript:void(0)" class="easyui-menubutton" data-options="menu:'#layoutList',iconCls:'icon-application-side-boxes'">布局风格</a>  
+		<div id="layoutList" style="width:110px;">
+		    <div themeName="h" data-options="iconCls:'icon-application-tile-horizontal'">横向</div>
+		    <div themeName="v" data-options="iconCls:'icon-application-tile-vertical'" onclick="window.location.href='$!basePath/admin/index/v'">纵向</div>
+		</div> -->
+		<a id="btnExit" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-exit',plain:true" onclick="exit()">退出系统</a>
+	</div>
+	<div data-step="1" data-intro="这里是系统的主菜单!" data-position='right' data-options="region:'west',split:false,title:'功能菜单',onCollapse:function(){top.Home.resizeTabs('collapse')},onExpand:function(){top.Home.resizeTabs('expand')}" style="width:200px;">
+		<div id="navMenu" class="easyui-accordion" data-options="fit:true,border:false">
+			#foreach($res in $firstRes)
+			<div title="$!res.name" data-options="selected:true,iconCls:'$!res.icon'" style="padding:5px;overflow:auto;">
+				<ul style="margin: 0;padding: 0;">
+					#foreach($childRes in $!resMap.get($!res.id))
+					<li class="nav-default" onmouseover="navHover(this)" onmouseout="navOut(this)"><a href="javascript:void(0)" src="$!{basePath}$!childRes.url" class="$!childRes.icon">$!childRes.name</a></li>
+					#end
+				</ul>
+			</div>
+			#end
+		</div>
+	</div>
+	<div data-step="4" data-intro="这里显示的是版权信息!" data-position='top' data-options="region:'south',border:false" style="height:20px;background:#f7f7f7;text-align: center;">#copyright</div>
+	<div id="mainTabs" data-step="2" data-intro="这里主显示区!"  class="easyui-tabs" data-position='left' data-options="region:'center',border:false">
+        <div id="home" title="桌面" data-options="icon:'icon-home'">
+            <div id="divFrame" class="easyui-panel" data-options="border:false,fit:true">
+				<iframe id="frameContent" src="$!basePath/admin/index/welcome" frameborder="0" width="100%" height="100%" scrolling="auto" marginheight="0" marginwidth="0" frameSpacing="0"></iframe>
+			</div>
+        </div>
+    </div>
+	<div id="tt" >
+		<a href="javascript:void(0)" title="独立窗口" id="frameOut" class="icon-application-cascade" onclick="top.Home.FrameOut()"></a>
+		<a data-step="3" data-intro="点击这里可以刷新哦!" title="刷新" data-position='left' href="javascript:void(0)" id="frameReload" class="icon-reload" onclick="top.Home.FrameReload();"></a>
+	</div>
+	<!-- 打开窗口存放的位置，不可删除 -->
+	<div id="FrameWorkWindows"></div>
+</body>
+</html>

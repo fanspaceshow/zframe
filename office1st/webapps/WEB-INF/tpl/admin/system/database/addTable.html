@@ -1,0 +1,247 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>新增表格</title>
+</head>
+<body>
+	<script type="text/javascript">
+		var winDbAddTable = new Windows("win_db_add_table");
+		var oDbAddTable = {
+			initForm : function(){
+				winDbAddTable.find("#DbAddTableForm").form({
+						url : '$!basePath/admin/database/doAddTable',
+						onSubmit : function() {
+							var pass = winDbAddTable.find('#DbAddTableForm').form("validate");
+							if (pass) {
+								if(oDbAddTable.endEdit()){
+									var rows = dg.datagrid("getRows");
+									if(rows.length == 0){
+										top.Notiy.warning("至少添加一个字段!");
+										pass = false;
+									}else{
+										var columns = new Array();
+										for(var i=0;i<rows.length;i++){
+											var row = rows[i];
+											var col = new JSONObject();
+											col.put("column_name", row.column_name);
+											col.put("datatype",row.datatype);
+											col.put("len",row.len);
+											col.put("b_c",row.b_c);
+											col.put("primary",row.primary=="是"?true:false);
+											col.put("unique",row.unique=="是"?true:false);
+											col.put("notnull",row.notnull=="是"?true:false);
+											col.put("defaultValue",row.defaultValue);
+											
+											columns.push(col.toString());
+										}
+										winDbAddTable.find("#DbAddTableForm").find("#columns").val(columns.toString());
+									}
+								}
+								//验证列是否为空
+								winDbAddTable.find("#ok").linkbutton("loading");
+							}
+							return pass;
+						},
+						success : function(data) {
+							var result = jQuery.parseJSON(data);
+							if (result.success == true) {
+								top.Notiy.success("表格创建成功!");
+								winDbAddTable.setReturnValue(true);
+								winDbAddTable.close();
+							} else {
+								top.Dialog.alert("失败", result.error,"error");
+							}
+							winDbAddTable.find("#ok").linkbutton("reset");
+						}
+					});
+				var dg = winDbAddTable.find("#dgTableColumns");
+				dg.datagrid({
+					autoRowHeight : false,
+					collapsible : true,
+					border : true,
+					idField : 'column_name',
+					fit : true,
+					fitColumns:true,
+					singleSelect : true,
+					columns : [ [ {
+						field : 'column_name',
+						title : '列名',
+						width : 100,
+						editor : {
+							type : 'validatebox',
+							options : {
+								required : true,
+								validType : 'noChinese'
+							}
+						}
+					}, {
+						field : 'datatype',
+						title : '数据类型',
+						width : 80,
+						editor : {
+							type : 'combobox',
+							options : {
+								valueField : 'id',
+								textField : 'text',
+								url : '$!basePath/admin/database/datatypes',
+								required : true
+							}
+						}
+					}, {
+						field : 'len',
+						title : '长度',
+						width : 40,
+						editor : {
+							type : 'numberspinner',
+							options : {
+								required : true
+							}
+						}
+					}, {
+						field : 'b_c',
+						title : 'Byte/Char',
+						width : 60,
+						editor : {
+							type : 'combobox',
+							options : {
+								valueField : 'id',
+								textField : 'text',
+								data:[
+								{id:'Byte',text:'Byte'},
+								{id:'Char',text:'Char'}
+								]
+							}
+						}
+					}, {
+						field : 'primary',
+						title : '主键?',
+						width : 30,
+						editor : {
+							type : 'checkbox',
+							options : {
+								on:'是',
+								off:'否'
+							}
+						}
+					}, {field : 'unique',title : '唯一?',width : 30,editor : {
+							type : 'checkbox',options : {
+								on:'是',
+								off:'否'
+							}}
+					}, {field : 'notnull',title : '不为空?',width : 30,editor : {type : 'checkbox',options : {
+								on:'是',
+								off:'否'}}
+					}, {field : 'defaultValue',title : '默认值',width : 80,editor : {
+							type : 'validatebox',options : {
+								validType : 'minLength[50]'
+							}}
+					} ] ],
+					rownumbers : true,
+					toolbar : '#dgTableColumns-toolbar',
+					onSelect : function(rowIndex,row){
+						if(oDbAddTable.endEdit()){
+							dg.datagrid("beginEdit", rowIndex);
+							winDbAddTable.editIndex = rowIndex;
+						}
+					}
+				});
+				winDbAddTable.editIndex = undefined;
+				//添加一行
+				winDbAddTable.find("#btnTableColumnsAdd").click(function() {
+					if(oDbAddTable.endEdit()){
+						dg.datagrid("appendRow", {column_name:'id',datatype:"INTEGER",len:1,b_c:"Byte"});
+						var editIndex = dg.datagrid("getRows").length - 1;
+						dg.datagrid("selectRow", editIndex).datagrid("beginEdit", editIndex);
+						winDbAddTable.editIndex = dg.datagrid("getRows").length - 1;
+					}
+				});
+				//删除当前编辑行
+				winDbAddTable.find("#btnTableColumnsRemove").click(function() {
+					if(winDbAddTable.editIndex == undefined)return;
+					dg.datagrid("cancelEdit",winDbAddTable.editIndex).datagrid("deleteRow",winDbAddTable.editIndex);
+					winDbAddTable.editIndex = undefined;
+				});
+				//表名自动大写
+				winDbAddTable.find("#DbAddTableForm").find("#tableName").keyup(function(){
+					var tableName = $(this).val();
+					$(this).val(tableName.toUpperCase());
+				});
+				winDbAddTable.find("#btnTableColumnsAdd").click();
+			},
+			endEdit : function(){
+				if(winDbAddTable.editIndex == undefined){return true;}
+				var dg = winDbAddTable.find("#dgTableColumns");
+				if(dg.datagrid("validateRow",winDbAddTable.editIndex)){
+					var primary = dg.datagrid("getEditor",{index:winDbAddTable.editIndex,field:'primary'});
+					dg.datagrid('endEdit', winDbAddTable.editIndex);
+					winDbAddTable.editIndex = undefined;
+					return true;
+				}else{
+					top.Notiy.warning("请按照要求正确填写当前列!");
+					return false;
+				}
+			},
+			ok : function(){
+				winDbAddTable.find('#DbAddTableForm').submit();
+			},
+			cancel : function(){
+				winDbAddTable.close();
+			}
+		}
+		$(function() {
+			oDbAddTable.initForm();
+		});
+	</script>
+	<div class="easyui-layout" data-options="fit:true">
+		<div data-options="region:'center',border:false">
+			<form id="DbAddTableForm" method="post"
+				style="padding-top:10px;padding-left:20px;padding-right:20px;">
+				<input type="hidden" id="columns" name="columns"/>
+				<table width="99%" style="line-height: 25px;">
+					<tr>
+						<td width="5%">Schema:</td>
+						<td><input class="easyui-combobox" name="schema" data-options="required:true,valueField:'id',textField:'text',url:'$!basePath/admin/database/schemas'" />  
+						</td>
+					</tr>
+					<tr>
+						<td width="10%">表名:</td>
+						<td><input id="tableName" class="easyui-validatebox" type="text"
+							name="tableName" maxlength="20" data-options="required:true,validType:'noChinese'"
+							style="width:100%" /></td>
+					</tr>
+					<tr>
+						<td width="10%">实体类名称:</td>
+						<td><input class="easyui-validatebox" type="text"
+							name="entityName" maxlength="20" data-options="required:true,validType:'english'"
+							style="width:100%" /></td>
+					</tr>
+				</table>
+				<table id="dgTableColumns"></table>
+				<div id="dgTableColumns-toolbar" style="padding:2px 0;"
+					class="datagrid-toolbar">
+					<table cellpadding="0" cellspacing="0" style="width:100%">
+						<tr>
+							<td style="padding-left:2px"><a id="btnTableColumnsAdd"
+								href="javascript:void(0)" class="easyui-linkbutton"
+								data-options="iconCls:'icon-add',plain:true"
+								style="float: left;">增加一列</a> <a id="btnTableColumnsRemove"
+								href="javascript:void(0)" class="easyui-linkbutton"
+								data-options="iconCls:'icon-remove',plain:true"
+								style="float: left;">删除选中列</a>
+								<div class="datagrid-btn-separator"></div></td>
+						</tr>
+					</table>
+				</div>
+			</form>
+		</div>
+		<!--Change Button Text-->
+		<div data-options="region:'south',border:false">
+			<div class="dialog-button">
+				<a id="ok" class="easyui-linkbutton" data-options="iconCls:'icon-ok'" href="javascript:void(0)" onclick="oDbAddTable.ok()">确定并创建</a>
+				<a id="cancel" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" href="javascript:void(0)" onclick="oDbAddTable.cancel()">取消</a>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

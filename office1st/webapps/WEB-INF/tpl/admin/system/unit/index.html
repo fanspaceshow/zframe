@@ -1,0 +1,169 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>index.html</title>
+	#style
+</head>
+<body class="easyui-layout">
+	<script type="text/javascript">
+		var win_Unitadd = new Windows("unit_add");
+		var win_Unitedit = new Windows("unit_edit");
+		$(function() {
+			initDataGrid();
+			initWindows();
+			initToolbar();
+			_InitButtonPrrmission();
+		});
+		function initDataGrid() {
+			$("#tgUnitList").treegrid({
+				autoRowHeight: false,
+				url : '$!basePath/admin/unit/unitList',
+				border:false,
+				fit:true,
+				idField:'id',
+				nowrap:false,
+				treeField:'name',
+				animate:true,
+				singleSelect:false,
+				frozenColumns : [[
+					{field : 'ck',checkbox : true},
+					{title : 'ID',field : 'id',width : 40,sortable : true}
+				]],
+				columns : [[ 
+					{field : 'name',title : '部门名称',width : 150,sortable : true,
+						formatter : function(value, row, index) {
+							return highShowSearch($("#tgUnitList"), "name", value);
+						}
+					},
+					{field:'code',title:'部门编码',width:120,sortable:true,
+						formatter:function(value,row,index){
+							return highShowSearch($("#tgUnitList"),"code",value);
+						}
+					},
+					{field:'address',title:'地址',width:120,sortable:true,
+						formatter:function(value,row,index){
+							return highShowSearch($("#tgUnitList"),"address",value);
+						}
+					},
+					{field:'email',title:'电子邮箱',width:150,sortable:true,
+						formatter:function(value,row,index){
+							if(value)
+								value = "<a href='mailto:"+value+"'>"+value+"</a>";
+							return value;
+						}
+					},
+					{field:'web',title:'网页',width:300,sortable:true,
+						formatter:function(value,row,index){
+							value = "<a href='"+value+"' target='_blank'>"+value+"</a>";
+							return value;
+						}
+					}
+				]],
+				rownumbers : true,
+				toolbar : '#tgUnitList-toolbar',
+				onContextMenu:function(e,row){
+					treeGridRowContentMenuShowHandler(e,row,"tgUnitList","tgUnitList_rowContextMenu");
+				},
+				onDblClickRow:function(row){
+					win_Unitedit.windows({href:"$!basePath/admin/unit/edit/"+row.id});
+					win_Unitedit.windows("open");
+				}
+			});
+		}
+		function initWindows() {
+			win_Unitadd.windows({
+				title:'新增部门',
+				width:350,
+				height:350,
+				modal:true,
+				closed:true,
+				iconCls:'icon-unit-add',
+				href:"$!basePath/admin/unit/add",
+				onClose:function(){
+					if(win_Unitadd.getReturnValue()=="true"){
+						$('#tgUnitList').treegrid("reload");
+					}
+				}
+			});
+			win_Unitedit.windows({
+				title:"编辑部门",
+				width:350,
+				height:350,
+				modal:true,
+				closed:true,
+				iconCls:'icon-unit-edit',
+				href:"$!basePath/admin/unit/edit",
+				onClose:function(){
+					if(win_Unitedit.getReturnValue()=="true"){
+							$('#tgUnitList').treegrid("reload");
+					}
+				}
+			});
+		}
+		function initToolbar() {
+			$("#btnAdd").click(function(){
+				win_Unitadd.open();
+			});
+			$("#btnEdit").click(function(){
+				var selectRows = $("#tgUnitList").treegrid("getSelected");
+					if(!selectRows){
+						top.Notiy.warning("请选择要编辑的项");
+					}else{
+						win_Unitedit.windows({href:"$!basePath/admin/unit/edit/"+selectRows.id});
+						win_Unitedit.windows("open");
+					}
+			});
+			$("#btnRemove").attr("deleteUrl","$!basePath/admin/unit/doDelete");
+			$("#btnRemove").click(function(){
+				TreeGridUtil.Delete("$!basePath/admin/unit/doDelete","tgUnitList");
+			});
+		}
+	//右键菜单中修改的触发事件
+	function doEditForContentMenu_btnEdit(id){
+		win_Unitedit.windows({href:"$!basePath/admin/unit/edit/"+id});
+		win_Unitedit.windows("open");
+	}
+	function rowContentMenuClickHandler(item){
+		TreeGridContentMenuClickHandler("tgUnitList",item);
+	}
+	function doSearch(v,n){	
+		doTreeGridSearch("tgUnitList","$!basePath/admin/unit/unitList",n,v);
+	}
+	</script>
+	<!--Tools And ContextMenu-->
+	<div data-options="region:'center',border:true">
+		<table id="tgUnitList"></table>
+	</div>
+	<!-- 工具条 -->
+	<div id="tgUnitList-toolbar" style="padding:2px 0;"
+		class="datagrid-toolbar">
+		<table cellpadding="0" cellspacing="0" style="width:100%">
+			<tr>
+				<td style="padding-left:2px">
+					<a id="btnAdd"	href="javascript:void(0)" class="easyui-linkbutton"	data-options="iconCls:'icon-unit-add',plain:true"	style="float: left;">新增</a>
+					<a id="btnEdit" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-unit-edit',plain:true"	style="float: left;">修改</a> 
+					<a id="btnRemove"	href="javascript:void(0)" class="easyui-linkbutton"	data-options="iconCls:'icon-unit-delete',plain:true" style="float: left;">删除</a>
+					<div class="datagrid-btn-separator"></div>
+					<a id="btnUserManager"	href="javascript:void(0)" class="easyui-linkbutton"	data-options="iconCls:'icon-user',plain:true" style="float: left;">管理成员</a>
+				</td>
+				<td style="text-align:right;padding-right:2px">
+					<input id="ss"	style="width:240px;" class="easyui-searchbox"	data-options="searcher:doSearch,prompt:'请输入查询内容',menu:'#ss_mm'"></input>
+					<div id="ss_mm" style="width:80px;">
+						<div data-options="name:'id'">序号</div>
+						<div data-options="name:'name'">部门名称</div>
+						<div data-options="name:'code'">部门编码</div>
+					</div>
+				</td>
+			</tr>
+		</table>
+	</div>
+	<!-- 右键菜单 -->
+	<div id="tgUnitList_rowContextMenu" data-options="onClick:rowContentMenuClickHandler" class="easyui-menu" style="width:120px;">
+		<div name="select" data-options="iconCls:'icon-ok'">选中</div>
+		<div name="edit" data-options="iconCls:'icon-unit-edit'" with="btnEdit">修改</div>
+		<div name="remove" data-options="iconCls:'icon-unit-delete'" with="btnRemove">删除此部门</div>
+		<div name="removeSelected" data-options="iconCls:'icon-unit-delete'" with="btnRemove">删除选中部门</div>
+	</div>
+</body>
+</html>

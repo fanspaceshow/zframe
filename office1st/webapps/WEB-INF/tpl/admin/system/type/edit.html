@@ -1,0 +1,81 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>res_edit.html</title>
+
+</head>
+ <body>
+ <script type="text/javascript">
+ 	var winProEdit = new Windows("type_edit");
+ 	var oProEdit = {
+ 		initForm : function(){
+ 			winProEdit.find("#proForm").form({
+ 				url:'$!basePath/user/typescontroller/doEdit',
+ 				onSubmit: function(){
+			    	var pass = winProEdit.find('#proForm').form("validate");
+			    	if(pass){
+			    		winProEdit.find("#ok").linkbutton("loading");
+			    	}
+			    	return pass; 
+			    },   
+			    success:function(data){
+			   		var result = jQuery.parseJSON(data);
+			   		if(result.success == true){
+			        	top.Notiy.success("修改成功!");
+			        	winProEdit.setReturnValue(true);
+						winProEdit.close();
+			        }else if(result.NoChanges){
+			        	top.Notiy.info("您未做任何修改!");
+						winProEdit.close();			        	
+			        }else{
+			        	top.Dialog.alert("错误",result.error,"error");
+			        }
+
+			        winProEdit.find("#ok").linkbutton("reset");
+			    }
+ 			});
+ 		},
+ 		ok : function(){
+ 			winProEdit.find('#proForm').submit();
+ 		},
+ 		cancel : function(){
+ 			winProEdit.close();
+ 		}
+ 	};
+ 	$(function(){
+ 		var err=winProEdit.find("#error").val();
+	 	if(err){
+	 		top.Notiy.success("未知异常不能修改!");
+			winProEdit.setReturnValue(true);
+			winProEdit.close();
+	 	}
+	 	oProEdit.initForm();
+ 	});
+ </script>	
+ <div class="easyui-layout" data-options="fit:true">
+	 <div data-options="region:'center',border:false">
+	 	<form id="proForm" method="post" style="padding-top:10px;padding-left: 20px;">
+	 	<input type="hidden" name="id" value="$!pro.id"/>
+	 	<input type="hidden" id="error" value="$!error"/>
+	 		<table width="90%" >
+				<tr>
+				<td>类别：</td>
+						<td>
+							<input type="text" class="easyui-validatebox" name="type" maxlength="50" data-options="required:true" style="width: 90%;" value="$!pro.type"/>
+						</td>
+					</tr>
+					
+				</table>
+		</form>
+	 </div>
+	 <!--Change Button Text-->
+	 <div data-options="region:'south',border:false">
+	 	<div class="dialog-button">
+			<a id="ok" class="easyui-linkbutton" data-options="iconCls:'icon-ok'" href="javascript:void(0)" onclick="oProEdit.ok()">确定</a>
+			<a id="cancel" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" href="javascript:void(0)" onclick="oProEdit.cancel()">取消</a>
+		</div>
+	</div>
+ </div>
+  </body>
+</html>

@@ -1,0 +1,84 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>add.html</title>
+</head>
+ <body>
+<script type="text/javascript">
+$(function () {
+            var projecttype = $('#projecttype').combobox({
+                url:'$!basePath/user/typescontroller/showtypelist', 
+                valueField: 'id',
+                textField: 'text'
+
+            });
+        
+        });
+</script>
+	
+ <script type="text/javascript">
+ 	var winProAdd = new Windows("type_add");
+ 	var oProAdd = {
+ 	
+ 		initForm : function(){
+ 			winProAdd.find("#proForm").form({
+ 				url:'$!basePath/user/typescontroller/doAdd',
+ 				onSubmit: function(){
+			    	var pass = winProAdd.find('#proForm').form("validate");
+			    	
+			    	if(pass){
+			    		winProAdd.find("#ok").linkbutton("loading");
+			    	}
+			    	return pass; 
+			    },   
+			    success:function(data){
+			   		var result = jQuery.parseJSON(data);   
+			        if(result.success == true){
+			       		top.Notiy.success("添加成功!");
+		        		winProAdd.setReturnValue(true);
+						winProAdd.close();
+			        }else{
+			        	top.Dialog.alert("提示",result.error,"error");
+			        }
+			        winProAdd.find("#ok").linkbutton("reset");
+			    }
+ 			});
+ 		},
+ 		ok : function(){
+ 		
+ 			winProAdd.find('#proForm').submit();
+ 		},
+ 		cancel : function(){ 		
+ 			winProAdd.close();
+ 		}
+ 	};
+ 	$(function(){
+ 		oProAdd.initForm();
+ 	});
+ </script>
+ <div class="easyui-layout" data-options="fit:true">
+	 <div data-options="region:'center',border:false">
+	 	<form id="proForm" method="post" style="padding-top:10px;padding-left: 20px;">
+	 		<table width="90%" >
+					<tr>
+						<td>类别：</td> 
+						<td>
+							<input type="text" class="easyui-validatebox" name="type" maxlength="50" data-options="required:true" style="width: 90%;" />
+						</td>
+					</tr>
+					
+									
+				</table>
+		</form>
+	 </div>
+	 <!--Change Button Text-->
+	 <div data-options="region:'south',border:false">
+	 	<div class="dialog-button">
+			<a id="ok" class="easyui-linkbutton" data-options="iconCls:'icon-ok'" href="javascript:void(0)" onclick="oProAdd.ok()">确定</a>
+			<a id="cancel" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" href="javascript:void(0)" onclick="oProAdd.cancel()">取消</a>
+		</div>
+	</div>
+ </div>
+  </body>
+</html>

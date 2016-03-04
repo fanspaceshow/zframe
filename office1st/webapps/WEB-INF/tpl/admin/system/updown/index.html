@@ -1,0 +1,81 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+ <script type="text/javascript" src="$!basePath/framework/js/common/jquery-1.8.2.min.js"></script> 
+<!-- <script type="text/javascript" src="$!basePath/framework/js/common/jquery.form.js"></script>-->
+<!-- <script type="text/javascript" src="http://malsup.github.com/jquery.form.js"></script> -->
+<title>hello</title>
+#style
+</head>
+<body class="easyui-layout">
+<script type="text/javascript">
+/** $(function(){
+        $('a').click(function(){
+            var link=this.href+'?'+'fileName='+$('#fileName').val();
+            window.open(link);
+            return false;
+        });
+    });*/
+ 	
+ </script>
+  <script type="text/javascript"> 
+/**    function jsF_Upload(){
+            $("#fileForm").ajaxForm({
+                //定义返回JSON数据，还包括xml和script格式
+                dataType:'json',
+                beforeSend: function() {
+                    //表单提交前做表单验证
+                },
+                success: function(data) {
+                    var result = jQuery.parseJSON(data);   
+			        if(result.success == true){
+			       		top.Notiy.success("添加成功!");		        		
+			        }else{
+			        	top.Dialog.alert("提示",result.error,"error");
+			        }			       
+                }
+            });
+       }  */
+    </script>
+    <script type="text/javascript">
+    $(document).ready(
+    $.post("$!basePath/admin/upload/downloadlist",
+    function(data){
+    console.log(data) 
+   $.each(jQuery.parseJSON(data),function(key, value) {          			 	       	
+		      $("#persontable tr:last").after(
+		       		'<tr class="trclass"><td>' +value+		       		
+		       		'</td><td><a name="filename" id="change" href=$!basePath/admin/upload/downloaddo?filename='+key+'>下载</a></td></tr>').html();
+		  }
+	);
+  }) 
+);  
+    </script>
+     <div>
+        <form  enctype='multipart/form-data'  method="post" action="$!basePath/admin/upload/uploaddo">
+            <input type="file" name="uploadFile" />
+            <button>提交</button>
+        </form>
+    </div>
+    
+    <div>
+        <form  enctype='multipart/form-data'  method="post" action="$!basePath/admin/upload/importdo">
+            <input type="file" name="excelFile" />
+            <button>Eecel文件导入</button>
+        </form>
+    </div>
+    
+   <table id="persontable" border="1">
+            <tr>
+                <td>
+                    文件名
+                </td>
+                <td>
+                   下载
+                </td>
+                
+            </tr>
+       </table>
+</body>
+</html>

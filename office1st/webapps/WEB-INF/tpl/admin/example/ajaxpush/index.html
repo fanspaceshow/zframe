@@ -1,0 +1,43 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>index.html</title>
+	#style
+</head>
+ <body class="easyui-layout">
+ <script type="text/javascript">
+	$(function(){
+	     receive();
+	});
+	function push(){
+		$.post("$!basePath/admin/example/ajaxpush/push",{sid:$("#sid").val(),msg:$("#msg").val()},function(data){
+			if(data.success == true){
+				top.Notiy.success("发送成功!");
+			}
+		},"json");
+	}
+	function receive(){
+		$.post("$!basePath/admin/example/ajaxpush/receive",{},function(data){
+		for(var i=0;i<data.messages.length;i++){
+			var msg = data.messages[i];
+			var info = "收到：["+msg.fromName+"]的消息,发送于"+msg.sendTime;
+			top.Notiy.success(msg.fromName+":"+msg.msg);
+			$("#sid").val(msg.fromId);
+			$("#mq").append("<div>"+msg.fromName+":"+msg.msg+"</div>");
+		}
+		receive();
+		},"json");
+	}
+ </script>
+    <div data-options="region:'center',border:true">
+    	SID:<input type="text" id="sid"/><br />
+    	MSG:<input type="text" id="msg"/><br />
+		<input type="button" value="push" onclick="push()"/>
+		<hr/>
+		<div id="mq">
+			
+		</div>
+    </div>
+  </body>
+</html>

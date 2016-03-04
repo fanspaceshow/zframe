@@ -1,0 +1,154 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>系统首页</title>
+	#style
+	<link rel="stylesheet" type="text/css" href="$!basePath/framework/css/easyui/portal.css" />
+	<script type="text/javascript" src="$!basePath/framework/js/core/zframe.portal.js"></script>
+	<script type="text/javascript">
+		$(function(){
+			initWindows();
+			initDataGird();
+			initToolbars();
+			$('#desktopPortal').portal({
+				border:false
+			});
+		});
+		function initDataGird(){
+			
+		}
+		function initWindows(){
+			
+		}
+		function initToolbars(){
+			$("#btnZhToEn").click(function(){
+				var zh = $("#txtChinese").val();
+				var en = $("#txtEnglish");
+				if(jQuery.trim(zh) == ""){
+					top.Notiy.warning("请输入中文后点击下箭头翻译");
+					return;
+				}
+				$(this).linkbutton({iconCls:"icon-loading"});
+				jQuery.post("$!basePath/admin/index/translate",{type:"zh",val:zh},function(data){
+					en.val(data);
+					$("#btnZhToEn").linkbutton({iconCls:"icon-down"});
+				});
+			});
+			$("#btnEnToZh").click(function(){
+				var en = $("#txtEnglish").val();
+				var zh = $("#txtChinese");
+				if(jQuery.trim(en).length == 0){
+					top.Notiy.warning("请输入英文后点击上箭头翻译");
+					return;
+				}
+				$(this).linkbutton({iconCls:"icon-loading"});
+				jQuery.post("$!basePath/admin/index/translate",{type:"en",val:en},function(data){
+					zh.val(data);
+					$("#btnEnToZh").linkbutton({iconCls:"icon-up"});
+				});
+			});
+			$("#btnClear").click(function(){
+				$("#txtEnglish").val("");
+				$("#txtChinese").val("");
+			});
+		}
+	</script>
+</head>
+<body class="easyui-layout">
+	<div region="center" border="false" data-options="fit:true">
+		<div id="desktopPortal" style="position:relative">
+			<div style="width:40%;">
+				<div title="我的工作" iconCls="icon-work" collapsible="false" style="height:250px;padding-top:1px;" align="center" data-options="tools:[{
+					iconCls:'icon-refresh-default',
+					handler:function(){
+						
+					}
+				}]">
+				</div>
+				<!--  
+				<div title="生活方式" iconCls="icon-weather-cloudy" collapsible="false" style="height:260px;padding-top:1px;" data-options="tools:[{
+					iconCls:'icon-refresh-default',
+					handler:function(){
+						$('#tbWeather').datagrid('reload');
+					}
+				}]">
+					<table id="tbWeather" class="easyui-datagrid" data-options="fit:true,border:false,fitColumns:true,url:'$!basePath/admin/index/weather',loadMsg:'正在查询天气信息...'">   
+					    <thead>   
+					        <tr>   
+					            <th data-options="field:'city',width:30">城市</th>
+					            <th data-options="field:'time',width:60">日期</th>
+					            <th data-options="field:'weather',width:50">天气</th> 
+					            <th data-options="field:'c',width:50">温度</th> 
+					            <th data-options="field:'wind',width:60">风速</th>
+					        </tr>   
+					    </thead>   
+					</table> 
+				</div>-->
+			</div>
+			<div style="width:40%;">
+				<div title="已办事项" iconCls="icon-history" collapsible="false" style="height:250px;padding-top:1px;" data-options="tools:[{
+					iconCls:'icon-refresh-default',
+					handler:function(){
+						
+					}
+				}]">
+				</div>
+			<!-- 	<div title="电子邮件" iconCls="icon-email" style="height:260px;" data-options="tools:[{
+					iconCls:'icon-refresh-default',
+					handler:function(){
+						$('#tbEmail').datagrid('reload');
+					}
+				}]">
+					 <table id="tbEmail" class="easyui-datagrid" data-options="fit:true,border:false,fitColumns:true,url:'',loadMsg:'正在收取邮件...'">   
+					    <thead>   
+					        <tr>   
+					            <th data-options="field:'subject',width:30">标题</th>
+					            <th data-options="field:'from',width:30">发送人</th>
+					            <th data-options="field:'time',width:30">时间</th>
+					        </tr>   
+					    </thead>   
+					</table> 
+				</div>
+			</div> 
+			<div style="width:20%;">
+				<div title="当前时间" iconCls="icon-time" style="text-align:center;height:150px;padding:5px;">
+					<object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=6,0,29,0" width="100" height="100">
+					    <param name="movie" value="$!basePath/framework/flash/analog.swf">
+					    <param name=quality value=high>
+					    <param name="wmode" value="transparent">
+					    <embed src="$!basePath/framework/flash/analog.swf" width="100" height="100" quality=high pluginspage="http://www.macromedia.com/shockwave/download/index.cgi?P1_Prod_Version=ShockwaveFlash" type="application/x-shockwave-flash" wmode="transparent"></embed>
+					</object>
+				</div>
+				<div title="实用工具" iconCls="icon-anchor" collapsible="false" style="height:360px;">
+					<div id="ttTools" class="easyui-tabs" data-options="fit:true,border:false">   
+					    <div title="中英互译 ">   
+					       	  <table width="98%">
+					       	  	<tr>
+					       	  		<td>
+					       	  			<textarea class="easyui-textarea" id="txtChinese" rows="8" style="width:96%"></textarea>
+					       	  		</td>
+					       	  	</tr>
+					       	  	<tr>
+					       	  		<td>
+					       	  			<center>
+					       	  				<a id="btnZhToEn" class="easyui-linkbutton" data-options="iconCls:'icon-down',plain:true"></a>
+					       	  				<a id="btnClear" class="easyui-linkbutton" data-options="iconCls:'icon-refresh-default',plain:true"></a>
+					       	  				<a id="btnEnToZh" class="easyui-linkbutton" data-options="iconCls:'icon-up',plain:true"></a>
+					       	  			</center>
+					       	  		</td>
+					       	  	</tr>
+					       	  	<tr>
+					       	  		<td>
+					       	  			<textarea class="easyui-textarea" id="txtEnglish" rows="8" style="width:96%;readonly:true"></textarea>
+					       	  		</td>
+					       	  	</tr>
+					       	  </table>
+					    </div>   
+					</div> 
+				</div>-->
+			</div>
+		</div>
+  </div>
+  </body>
+</html>

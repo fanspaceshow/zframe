@@ -1,0 +1,206 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>操作按钮</title>
+	#style
+</head>
+ <body class="easyui-layout">
+ <script type="text/javascript">
+ 	var winBtnAdd = new Windows("btn_add");
+ 	var winBtnEdit = new Windows("btn_edit");
+	$(function(){
+	     initDataGrid();
+	     initWindows();
+	     initToolbar();
+	});
+	function initDataGrid(){
+		$('#dgButtonList').datagrid({
+				autoRowHeight: false,
+				collapsible:true,
+				url:'$!basePath/admin/button/btnList',
+				sortName: 'id',
+				sortOrder: 'asc',
+				remoteSort: true,
+				border:false,
+				fit:true,
+				idField:'id',
+				frozenColumns:[[
+	                {field:'ck',checkbox:true},
+	                {title:'序号',field:'id',width:40,sortable:true}
+				]],
+				columns:[[
+					{field:'icon',title:'图标',width:40,align:'center',formatter:function(value,row,index){
+						value = "<span class='"+value+"' style='padding-bottom:3px;'\>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>"
+						return value;
+					}},
+					{field:'name',title:'按钮名称',width:150,sortable:true,
+						sorter:function(a,b){
+							return (a>b?1:-1);
+						},formatter:function(value,row,index){
+							return highShowSearch($("#dgButtonList"),"name",value);
+						}
+					},
+					{field:'field',title:'字段ID',width:150,
+						sorter:function(a,b){
+							return (a>b?1:-1);
+						},formatter:function(value,row,index){
+							return highShowSearch($("#dgButtonList"),"field",value);
+						}
+					},
+					{field:'enabled',title:'状态',width:50,formatter:function(value,row,idex){
+						if(value=="0")
+							return "启用";
+						else if(value=="1")
+							return "<span style='color:red;'>禁用<span>";
+					}}
+				]],
+				pagination:true,
+				rownumbers:true,
+				toolbar:'#dgButtonList-toolbar',
+				onRowContextMenu:function(e,rowindex,rowData){
+					rowContentMenuShowHandler(e,rowindex,rowData,"dgButtonList","dgButtonList_rowContextMenu");
+				},
+				onDblClickRow:function(rowindex,rowdata){
+					winBtnEdit.windows({href:"$!basePath/admin/button/edit/"+rowdata.id});
+					winBtnEdit.open();
+				}
+			});
+	}
+	function initWindows(){
+		winBtnAdd.windows({
+			title:'新增按钮',
+			width:350,
+			height:250,
+			modal:true,
+			closed:true,
+			iconCls:'icon-button-add',
+			href:"$!basePath/admin/button/add",
+			onClose:function(){
+				if(winBtnAdd.getReturnValue()=="true"){
+					$('#dgButtonList').datagrid("reload");
+				}
+			}
+		});
+		winBtnEdit.windows({
+			title:'修改按钮',
+			width:350,
+			height:250,
+			modal:true,
+			closed:true,
+			iconCls:'icon-button-edit',
+			href:"$!basePath/admin/button/edit",
+			onClose:function(){
+				if(winBtnEdit.getReturnValue()=="true"){
+					$('#dgButtonList').datagrid("reload");
+				}
+			}
+		});
+	}
+	function initToolbar(){
+		$("#btnAdd").click(function(){
+			winBtnAdd.open();
+		});
+		$("#btnEdit").click(function(){
+			var selectRows = $("#dgButtonList").datagrid("getSelected");
+				if(!selectRows){
+					top.Notiy.warning("请选择要编辑的项");
+				}else{
+					winBtnEdit.windows({href:"$!basePath/admin/button/edit/"+selectRows.id});
+					winBtnEdit.windows("open");
+				}
+		});
+		$("#btnRemove").attr("deleteUrl","$!basePath/admin/button/doDelete");
+		$("#btnRemove").click(function(){
+			DataGridUtil.Delete("$!basePath/admin/button/doDelete","dgButtonList");
+		});
+		$("#btnLock").click(function(){
+			lockOrUnlock(0);
+		});
+		$("#btnUnLock").click(function(){
+			lockOrUnlock(1);
+		});
+	}
+	function lockOrUnlock(type){
+		var selectRows = $("#dgButtonList").datagrid("getSelections");
+		var tag = "禁用";
+		if(type == 1){
+			tag = "启用";
+		}
+		if(selectRows.length == 0){
+			top.Notiy.warning("请选择要"+tag+"的按钮!");
+			return ;
+		}
+		var ids = new Array();
+		$.each(selectRows,function(index,row){
+			ids.push(row.id);
+		});
+		$.post("$!basePath/admin/button/lock",{"type":type,"ids":ids.toString()},function(data){
+			var r = data.isLocked;
+			if(type == 1)
+				r = data.isUnLocked;
+			if(r){
+				top.Notiy.success(tag+"成功!");
+				//$("#dgButtonList").datagrid("reload");
+				//更新表格显示，采用js更新
+				$.each(selectRows,function(index,row){
+					var oIndex = $("#dgButtonList").datagrid("getRowIndex",row);
+					$("#dgButtonList").datagrid("updateRow",{
+						index:oIndex,
+						row:{
+							enabled:type==0?1:0
+						}
+					});
+				});
+			}else{
+				top.Dialog.error(data.error);
+			}
+		},"json");
+	}
+	//右键菜单中修改的触发事件
+	function doEditForContentMenu_btnEdit(id){
+		winBtnEdit.windows({href:"$!basePath/admin/button/edit/"+id});
+		winBtnEdit.windows("open");
+	}
+	function rowContentMenuClickHandler(item){
+		ContentMenuClickHandler("dgButtonList",item);
+	}
+	function doSearch(v,n){
+		doDataGridSearch("dgButtonList",n,v);
+	}
+ </script>
+    <div data-options="region:'center',border:true">
+		<table id="dgButtonList"></table>
+    </div>
+    <!--Tools And ContextMenu-->
+    <div id="dgButtonList-toolbar" style="padding:2px 0;" class="datagrid-toolbar">
+		<table cellpadding="0" cellspacing="0" style="width:100%">
+			<tr>
+				<td style="padding-left:2px">
+					<a id="btnAdd" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-button-add',plain:true" style="float: left;">新增</a>
+					<a id="btnEdit" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-button-edit',plain:true" style="float: left;">修改</a>
+					<a id="btnRemove" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-button-delete',plain:true" style="float: left;">删除</a>
+					<div class="datagrid-btn-separator"></div>
+					<a id="btnUnLock" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-lock',plain:true" style="float: left;">启用</a>
+					<a id="btnLock" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-unlock',plain:true" style="float: left;">禁用</a>
+				</td>
+				<td style="text-align:right;padding-right:2px">
+					<input id="ss" style="width:240px;" class="easyui-searchbox" data-options="searcher:doSearch,prompt:'请输入查询内容',menu:'#ss_mm'"></input>
+					<div id="ss_mm" style="width:80px;">
+						<div data-options="name:'id'">序号</div>
+						<div data-options="name:'name'">按钮名称</div>
+						<div data-options="name:'field'">字段名称</div>
+					</div>
+				</td>
+			</tr>
+		</table>
+	</div>
+	<!-- 右键菜单 -->
+	<div id="dgButtonList_rowContextMenu" data-options="onClick:rowContentMenuClickHandler" class="easyui-menu" style="width:120px;">
+		<div name="select" data-options="iconCls:'icon-ok'">选中</div>
+		<div name="edit" data-options="iconCls:'icon-button-edit'" with="btnEdit">修改</div>
+		<div name="remove" data-options="iconCls:'icon-button-delete'" with="btnRemove">删除此按钮</div>
+		<div name="removeSelected" data-options="iconCls:'icon-button-delete'" with="btnRemove">删除已选中按钮</div>
+	</div>
+  </body>
+</html>

@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+    xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xsi:schemaLocation="
+	http://www.springframework.org/schema/aop
+	http://www.springframework.org/schema/aop/spring-aop-3.1.xsd
+    http://www.springframework.org/schema/tx
+    http://www.springframework.org/schema/tx/spring-tx-3.1.xsd
+    http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+    http://www.springframework.org/schema/context
+    http://www.springframework.org/schema/context/spring-context-3.1.xsd
+    http://www.springframework.org/schema/mvc
+    http://www.springframework.org/schema/mvc/spring-mvc-3.1.xsd">
+	<!-- 对所有的实体类进行扫描，完成Bean的创建和自动依赖注入的功能 -->
+	<context:component-scan base-package="org.zframework">
+		<context:exclude-filter type="annotation"
+			expression="org.springframework.stereotype.Controller" />
+	</context:component-scan>
+	<!-- 数据源配置 -->
+	<bean id="preferences" class="org.zframework.core.factory.config.PropertyPlaceholderConfigurerExt">
+		<!-- 指定数据库配置文件路径 -->
+		<property name="locations">
+			<list>
+				<value>classpath:org/zframework/conf/jdbc_mysql.properties</value>
+			</list>
+		</property>
+	</bean>
+	<!-- 定义数据源Bean,使用C3P0数据源实现-->
+	
+    <bean id="parentDataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+        <!-- 指定连接池中保留的最大连接数. Default:15-->
+        <property name="maxPoolSize" value="${jdbc.maxPoolSize}"/>
+        <!-- 指定连接池中保留的最小连接数-->
+        <property name="minPoolSize" value="${jdbc.minPoolSize}"/>
+        <!-- 指定连接池的初始化连接数  取值应在minPoolSize 与 maxPoolSize 之间.Default:3-->
+        <property name="initialPoolSize" value="${jdbc.initialPoolSize}"/>
+        <!-- 最大空闲时间,60秒内未使用则连接被丢弃。若为0则永不丢弃。 Default:0-->
+        <property name="maxIdleTime" value="${jdbc.maxIdleTime}"/>
+        <!-- 当连接池中的连接耗尽的时候c3p0一次同时获取的连接数. Default:3-->
+        <property name="acquireIncrement" value="${jdbc.acquireIncrement}"/>
+        <!-- JDBC的标准,用以控制数据源内加载的PreparedStatements数量。但由于预缓存的statements属于单个connection而不是整个连接池所以设置这个参数需要考虑到多方面的因数.如果maxStatements与maxStatementsPerConnection均为0,则缓存被关闭。Default:0-->
+        <property name="maxStatements" value="${jdbc.maxStatements}"/>
+        <!-- 每60秒检查所有连接池中的空闲连接.Default:0 -->
+        <property name="idleConnectionTestPeriod" value="${jdbc.idleConnectionTestPeriod}"/>
+        <!-- 定义在从数据库获取新连接失败后重复尝试的次数。 Default:30 -->
+        <property name="acquireRetryAttempts" value="${jdbc.acquireRetryAttempts}"/>
+        <!-- 获取连接失败将会引起所有等待连接池来获取连接的线程抛出异常。但是数据源仍有效保留,并在下次调用getConnection()的时候继续尝试获取连接。如果设为true,那么在尝试获取连接失败后该数据源将申明已断开并永久关闭。Default:false -->
+        <property name="breakAfterAcquireFailure" value="${jdbc.breakAfterAcquireFailure}"/>
+        <!-- 性能消耗大请只在需要的时候使用它。如果设为true,那么在每个connection提交的时候都将校验其有效性。建议使用idleConnectionTestPeriod或automaticTestTable等提升连接测试的性能。 Default:false-->
+        <property name="testConnectionOnCheckout" value="${jdbc.testConnectionOnCheckout}"/>
+    </bean>
+    <!-- 主数据源 -->
+    <bean id="masterDataSource" parent="parentDataSource">
+    	 <!-- 指定连接数据库的驱动-->
+        <property name="driverClass" value="${jdbc.master.driver}"/>
+        <!-- 指定连接数据库的URL-->
+        <property name="jdbcUrl" value="${jdbc.master.url}"/>
+        <!-- 指定连接数据库的用户名-->
+        <property name="user" value="${jdbc.master.username}"/>
+        <!-- 指定连接数据库的密码-->
+        <property name="password" value="${jdbc.master.password}"/>
+    </bean>
+    <!-- 从数据源 -->
+     <bean id="slaveDataSource" parent="parentDataSource">
+    	 <!-- 指定连接数据库的驱动-->
+        <property name="driverClass" value="${jdbc.slave.driver}"/>
+        <!-- 指定连接数据库的URL-->
+        <property name="jdbcUrl" value="${jdbc.slave.url}"/>
+        <!-- 指定连接数据库的用户名-->
+        <property name="user" value="${jdbc.slave.username}"/>
+        <!-- 指定连接数据库的密码-->
+        <property name="password" value="${jdbc.slave.password}"/>
+    </bean>
+    <!-- 多数据源切换器 -->
+    <bean id="multiDataSource" class="org.zframework.orm.datasource.DataSourceSwitcher">
+   		<!-- 绑定默认数据源 -->
+    	<property name="dataSource" ref="masterDataSource"/>
+    </bean>
+    <bean id="multiDataSourceAdvice" class="org.zframework.orm.datasource.DataSourceSwitcherAdvice"/>
+    <!-- 数据源自动切换 -->
+    <aop:config>
+        <aop:pointcut id="dataSourceAdvicePointcut" expression="execution(* org.zframework.web.service..*.*(..))" />
+        <aop:advisor pointcut-ref="dataSourceAdvicePointcut" advice-ref="multiDataSourceAdvice"></aop:advisor>
+    </aop:config>
+    <!-- 集成Hibernate -->
+    <bean id="sessionFactory" class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+    	<property name="dataSource" ref="multiDataSource" />
+    	<property name="packagesToScan">
+    		<list>
+    			<value>org.zframework.web.entity</value>
+    		</list>
+    	</property>
+    	<property name="hibernateProperties">
+    		<props>
+                <prop key="hibernate.dialect">${hibernate.dialect}</prop>
+                <prop key="hibernate.show_sql">${hibernate.show_sql}</prop>
+                <prop key="hibernate.format_sql">true</prop>
+                <prop key="hibernate.temp.use_jdbc_metadata_defaults">false</prop>
+                <prop key="hibernate.query.substitutions">${hibernate.query.substitutions}</prop>
+                <prop key="hibernate.default_batch_fetch_size">${hibernate.default_batch_fetch_size}</prop>
+                <prop key="hibernate.max_fetch_depth">${hibernate.max_fetch_depth}</prop>
+                <prop key="hibernate.generate_statistics">${hibernate.generate_statistics}</prop>
+                <prop key="hibernate.bytecode.use_reflection_optimizer">${hibernate.bytecode.use_reflection_optimizer}</prop>
+                <prop key="hibernate.cache.use_second_level_cache">${hibernate.cache.use_second_level_cache}</prop>
+                <prop key="hibernate.cache.use_query_cache">${hibernate.cache.use_query_cache}</prop>
+                <prop key="hibernate.cache.region.factory_class">${hibernate.cache.region.factory_class}</prop>
+                <prop key="net.sf.ehcache.configurationResourceName">${net.sf.ehcache.configurationResourceName}</prop>
+                <prop key="hibernate.cache.use_structured_entries">${hibernate.cache.use_structured_entries}</prop>
+            </props>
+    	</property>
+    </bean>
+    <!-- 开启AOP监听 只对当前配置文件有效 -->
+	<aop:aspectj-autoproxy expose-proxy="true"/>
+	<!-- 开启注解事务 只对当前配置文件有效 -->
+  	<tx:annotation-driven transaction-manager="transactionManager"/>
+    <bean id="transactionManager" class="org.springframework.orm.hibernate4.HibernateTransactionManager">
+        <property name="sessionFactory" ref="sessionFactory"/>
+    </bean>
+    <tx:advice id="transactionAdvice" transaction-manager="transactionManager">
+        <tx:attributes>
+            <tx:method name="save*" propagation="REQUIRED" rollback-for="Exception" />
+            <tx:method name="add*" propagation="REQUIRED" rollback-for="Exception" />
+            <tx:method name="create*" propagation="REQUIRED" rollback-for="Exception" />
+            <tx:method name="insert*" propagation="REQUIRED" rollback-for="Exception" />
+            <tx:method name="update*" propagation="REQUIRED" rollback-for="Exception" />
+            <tx:method name="merge*" propagation="REQUIRED" rollback-for="Exception" />
+            <tx:method name="del*" propagation="REQUIRED" rollback-for="Exception" />
+            <tx:method name="remove*" propagation="REQUIRED" rollback-for="Exception" />
+            <tx:method name="put*" propagation="REQUIRED" rollback-for="Exception" />
+            <tx:method name="use*" propagation="REQUIRED" rollback-for="Exception" />
+            <tx:method name="record*" propagation="REQUIRED" rollback-for="Exception" />
+            <tx:method name="lock*" propagation="REQUIRED" rollback-for="Exception" />
+            <tx:method name="execute*" propagation="REQUIRED" rollback-for="Exception" />
+            <!--hibernate4必须配置为开启事务 否则 getCurrentSession()获取不到-->
+            <tx:method name="get*" propagation="REQUIRED" read-only="true" />
+            <tx:method name="count*" propagation="REQUIRED" read-only="true" />
+            <tx:method name="find*" propagation="REQUIRED" read-only="true" />
+            <tx:method name="list*" propagation="REQUIRED" read-only="true" />
+            <tx:method name="query*" propagation="REQUIRED" read-only="true" />
+            <tx:method name="*" read-only="false" />
+        </tx:attributes>
+    </tx:advice>
+    <aop:config expose-proxy="true">
+        <!-- 只对Service层实施事务 -->
+        <aop:pointcut id="transactionPointcut" expression="execution(* org.zframework.web.service..*.*(..))" />
+        <aop:advisor advice-ref="transactionAdvice" pointcut-ref="transactionPointcut"/>
+    </aop:config>
+	<!-- 配置ApplicationContextHelper -->
+	<bean class="org.zframework.core.support.ApplicationContextHelper" />
+	<!-- 注入DaseDao -->
+	<bean id="baseHibernateDaoImpl" class="org.zframework.orm.dao.BaseHibernateDaoImpl"/>
+	<!-- 插件加载器 -->
+	<bean id="pluginLoader" class="org.zframework.core.plugin.PluginLoader" init-method="init"/>
+	<!-- 插件拦截器 -->
+	<bean id="pluginAdvice" class="org.zframework.core.plugin.PluginAdvice" />
+	<aop:config>
+        <aop:pointcut id="pluginAdvicePointcut" expression="execution(* org.zframework.web..*.*(..))" />
+        <aop:advisor pointcut-ref="pluginAdvicePointcut" advice-ref="pluginAdvice"></aop:advisor>
+    </aop:config>
+	<!-- 支持上传文件 -->
+	<bean id="multipartResolver"
+	class="org.springframework.web.multipart.commons.CommonsMultipartResolver"
+	p:defaultEncoding="UTF-8"
+	p:maxUploadSize="5242880"
+	p:uploadTempDir="resources/upload/temp/"/>
+	
+	<!-- JMS配置 -->
+	
+	<!-- JMS配置 end -->
+</beans>

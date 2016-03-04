@@ -1,0 +1,132 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>选择角色</title>
+</head>
+ <body>
+ <script type="text/javascript">
+ 	var winRoleList = new Windows("user_role_list");
+ 	
+ 	var oRoleList = {
+ 		initDataGrid : function(){
+ 			winRoleList.find('#dgUserRoles').datagrid({
+				autoRowHeight: false,
+				collapsible:true,
+				url:'$!basePath/admin/role/roleListForUser',
+				sortName: 'id',
+				sortOrder: 'asc',
+				remoteSort: true,
+				border:false,
+				fit:true,
+				idField:'id',
+				frozenColumns:[[
+	                {field:'ck',checkbox:true},
+	                {title:'序号',field:'id',width:40,sortable:true}
+				]],
+				columns:[[
+					{field:'name',title:'名称',width:135,sortable:true,
+						sorter:function(a,b){
+							return (a>b?1:-1);
+						},formatter:function(value,row,index){
+							return highShowSearch(winRoleList.find("#dgUserRoles"),"name",value);
+						}
+					},
+					{field:'descript',title:'描述',width:200}
+				]],
+				rownumbers:true,
+				toolbar:'#dgUserRoles-toolbar',
+				onLoadSuccess:function(){
+					oRoleList.initParam();
+				}
+			});
+ 		},
+ 		initParam : function(){//初始化已经选中的角色
+ 			var selectRoles = winRoleList.getParam();
+	 		var allRows = winRoleList.find('#dgUserRoles').datagrid("getRows");
+	 		if($.trim(selectRoles).length==0){
+	 			$.each(allRows,function(i,n){
+	 				if(n.name == "$!defaultRole"){
+	 					winRoleList.find('#dgUserRoles').datagrid("selectRow",i);
+	 					return ;
+	 				}
+	 			});
+	 		}else{
+	 			var values = selectRoles.split(",");
+	 			$.each(allRows,function(i,n){
+	 				if(oRoleList.hasValues(n.id,values)){
+	 					winRoleList.find('#dgUserRoles').datagrid("selectRow",i);
+	 				}
+	 			});
+	 		}
+ 		},
+ 		hasValues : function(v,values){
+ 			var result = false;
+	 		for(var i=0;i<values.length;i++){
+	 			var n = values[i];
+	 			if(v==n){
+	 				result = true;
+	 				break;
+	 			}
+	 		}
+	 		return result;
+ 		},
+ 		doSearch : function(v,n){
+ 			doDataGridSearch("dgUserRoles",n,v);
+ 		},
+ 		ok : function(){
+ 			var selectRows = winRoleList.find('#dgUserRoles').datagrid("getSelections");
+	  		if(selectRows.length==0){
+	  			winRoleList.setReturnValue(false);
+	  			winRoleList.close();
+	  			return ;
+	  		}
+	  		var ids = "";
+	  		var names = "";
+	  		var jSelectRoles = new JSONObject();
+	  		$.each(selectRows,function(i,n){
+	  			ids += ","+n.id;
+	  			names += ",["+n.name+"]";
+	  		});
+	  		ids = ids.substring(1);
+	  		names = names.substring(1);
+	  		jSelectRoles.put("ids", ids);
+	  		jSelectRoles.put("names",names);
+	  		winRoleList.setReturnValue(jSelectRoles);
+	  		winRoleList.close();
+ 		},
+ 		cancel : function(){
+ 			winRoleList.close();
+ 		}
+ 	};
+ 	$(function(){
+ 		oRoleList.initDataGrid();
+ 	});
+ </script>
+ <div class="easyui-layout" data-options="fit:true">
+	 <div data-options="region:'center',border:false">
+	 	<table id="dgUserRoles"></table>
+	 </div>
+	 <div id="dgUserRoles-toolbar" style="padding:2px 0;" class="datagrid-toolbar">
+		<table cellpadding="0" cellspacing="0" style="width:100%">
+			<tr>
+				<td style="text-align:right;padding-right:5px;padding-top:3px;">
+					<input id="ss" style="width:220px;" class="easyui-searchbox" data-options="searcher:oRoleList.doSearch,prompt:'请输入查询内容',menu:'#ss_mm'"></input>
+					<div id="ss_mm" style="width:80px;">
+						<div data-options="name:'id'">序号</div>
+						<div data-options="name:'name'">角色名称</div>
+					</div>
+				</td>
+			</tr>
+		</table>
+	</div>
+	 <!--Change Button Text-->
+	 <div data-options="region:'south',border:false">
+		<div class="dialog-button">
+			<a id="ok" class="easyui-linkbutton" data-options="iconCls:'icon-ok'" href="javascript:void(0)" onclick="oRoleList.ok()">确定</a>
+			<a id="cancel" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" href="javascript:void(0)" onclick="oRoleList.cancel()">取消</a>
+		</div>
+	</div>
+ </div>
+  </body>
+</html>

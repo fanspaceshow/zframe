@@ -1,0 +1,376 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>客户管理首页</title>
+	#style
+</head>
+<body class="easyui-layout">
+<script type="text/javascript" src="$!basePath/framework/js/core/plugin/zframe.windows.js"></script>
+	<script type="text/javascript">
+		var win_Add = new Windows("officedepot_add");
+		var win_Edit = new Windows("officedepot_edit");		
+		var win_IntoWare = new Windows("officedepot_into");
+		var win_OutWare = new Windows("officedepot_out");
+		var win_ImportExcel = new Windows("officedepot_import");
+		$(function() {
+			initDataGrid();
+			initWindows();
+			initToolbar();
+		});
+		function initDataGrid(){
+			$('#dgProList').datagrid({
+				autoRowHeight : false,
+				collapsible : true,
+				url : '$!basePath/user/officecontroller/officeList',
+				sortName : 'id',
+				sortOrder : 'asc',
+				remoteSort : true,
+				border : false,
+				fit : true,
+				idField : 'id',
+				frozenColumns:[[
+	                {field:'ck',checkbox:true},
+	                {title:'序号',field:'id',width:40,sortable:true}
+				]],
+				columns:[[
+					{
+						field : 'goodsname',
+						title : '物品名称',
+						width : 80,
+						sortable : true,
+						formatter : function(value, row, index){
+							return highShowSearch($('#dgProList'),"goodsName", value);
+						}
+					},
+					{
+						field : 'warehouseamount',
+						title : '库存数量',
+						width : 80,
+						sortable : true,
+						formatter : function(value, row, index) {
+							return highShowSearch($("#dgProList"),"warehouseAmount", value);
+						}
+					},
+					{
+						field:'units',
+						title:'单位',
+						width:80,
+						sortable : true,
+						formatter:function(value,row,index){
+					         return highShowSearch($("#dgProList"),"units", value);
+						}
+					},
+					{
+						field:'warehousename',
+						title:'库名',
+						width:90,
+						sortable : true,
+						formatter:function(value,row,index){
+					         return highShowSearch($("#dgProList"),"warehouseName", value);
+						}
+					}
+					,
+					{
+						field:'supplier',
+						title:'供应商',
+						width:120,
+						sortable : true,
+						formatter:function(value,row,index){
+					         return highShowSearch($("#dgProList"),"supplier", value);
+						}
+					},
+					{
+						field:'types',
+						title:'类别',
+						width:80,
+						sortable : true,
+						formatter:function(value,row,index){
+					         return highShowSearch($("#dgProList"),"types", value);
+						}
+					},
+					{
+						field:'thewarehousepeople',
+						title:'最后入库人',
+						width:80,
+						sortable : true,
+						formatter:function(value,row,index){
+					         return highShowSearch($("#dgProList"),"theWarehousePeople", value);
+						}
+					},
+					{
+						field:'thestoragetime',
+						title:'最后入库时间',
+						width:160,
+						sortable : true,
+						formatter:function(value,row,index){
+					         return highShowSearch($("#dgProList"),"theStorageTime", value);
+						}
+					},
+					{
+						field:'lastborrower',
+						title:'最后领用人',
+						width:80,
+						sortable : true,
+						formatter:function(value,row,index){
+					         return highShowSearch($("#dgProList"),"lastBorrower", value);
+						}
+					},
+					{
+						field:'lastborrowtime',
+						title:'最后领用时间',
+						width:160,
+						sortable : true,
+						formatter:function(value,row,index){
+					         return highShowSearch($("#dgProList"),"lastBorrowTime", value);
+						}
+					},
+					{
+						field:'remarks',
+						title:'备注',
+						width:120,
+						sortable : true,
+						formatter:function(value,row,index){
+					         return highShowSearch($("#dgProList"),"remarks", value);
+						}
+					}
+					]],
+					pagination : true,
+					rownumbers : true,
+					toolbar : '#dgProList-toolbar',
+					onRowContextMenu : function(e, rowindex, rowData) {
+						rowContentMenuShowHandler(e, rowindex, rowData,"dgProList", "dgProList_rowContextMenu");
+					}
+				});
+		}
+		function initWindows() {
+			win_Add.windows({
+				title : "办公用品入库",
+				width : 600,
+				height : 430,
+				modal : true,
+				cache : false,
+				closed : true,
+				iconCls : 'icon-assets-computer-add',
+				href : "$!basePath/user/officecontroller/add",
+				onClose : function() {
+					if (win_Add.getReturnValue() == "true") {
+						$('#dgProList').datagrid("reload");
+					}
+				}
+			});
+			win_Edit.windows({
+				title : "办公用品编辑",
+				width : 400,
+				height : 500,
+				modal : true,
+				cache : false,
+				closed : true,
+				iconCls : 'icon-assets-computer-edit',
+				href : "$!basePath/user/officecontroller/edit",
+				onClose : function() {
+					if (win_Edit.getReturnValue() == "true") {
+						$('#dgProList').datagrid("reload");
+					}
+				}
+			});
+			
+			win_IntoWare.windows({
+			    title:"办公用品入库",
+				width:400,
+				height:300,
+				modal:true,
+				cache:false,
+				closed:true,
+				iconCls:'icon-assets-computer-edit',
+				href:"$!basePath/user/officecontroller/intoware",
+				onClose:function() {
+					if (win_IntoWare.getReturnValue() == "true") {
+						$('#dgProList').datagrid("reload");
+					}
+				}
+			}
+			);			
+			win_OutWare.windows({
+			    title:"办公用品出库",
+				width:400,
+				height:200,
+				modal:true,
+				cache:false,
+				closed:true,
+				iconCls:'icon-assets-computer-edit',
+				href:"$!basePath/user/officecontroller/outware",
+				onClose:function() {
+					if (win_OutWare.getReturnValue() == "true") {
+						$('#dgProList').datagrid("reload");
+					}
+				}
+			}
+			);
+			
+			
+			win_ImportExcel.windows({
+			    title:"办公用品导入",
+				width:400,
+				height:200,
+				modal:true,
+				cache:false,
+				closed:true,
+				iconCls:'icon-assets-computer-edit',
+				href:"$!basePath/admin/importExcel/import",
+				onClose:function() {
+					if (win_OutWare.getReturnValue() == "true") {
+						$('#dgProList').datagrid("reload");
+					}
+				}
+			}
+			);
+			
+			//**************************************			
+		}
+	
+		function rowContentMenuClickHandler(item) {
+			ContentMenuClickHandler("dgProList", item);
+		}
+		function initToolbar() {
+			$("#btnAdd").click(function() {
+				win_Add.open();
+			});
+			$("#btnEdit").click(function(id) {
+					var selectRows = $("#dgProList").datagrid("getSelected");
+					if(!selectRows){
+						top.Notiy.warning("请选择要编辑的项");
+					}else{
+							$.ajax({
+	  							type: 'POST',
+	  							url: "$!basePath/user/officecontroller/"+selectRows.id,
+	  							success: function(data){				
+			   					win_Edit.windows({href:"$!basePath/user/officecontroller/edit/"+selectRows.id});
+								win_Edit.windows("open");
+	  						}
+					});
+				}
+			});
+			
+			//add by tianmingfan 20160226
+			$("#btnIntoware").click(function(id) {
+					var selectRows = $("#dgProList").datagrid("getSelected");
+					if(!selectRows){
+						top.Notiy.warning("请选择要编辑的项");
+					}else{
+							$.ajax({
+	  							type: 'POST',
+	  							url: "$!basePath/user/officecontroller/"+selectRows.id,
+	  							success: function(data){				
+			   					win_IntoWare.windows({href:"$!basePath/user/officecontroller/intoware/"+selectRows.id});
+								win_IntoWare.windows("open");
+	  						}
+					});
+				}
+			});
+			$("#btnOutware").click(function(id) {
+					var selectRows = $("#dgProList").datagrid("getSelected");
+					if(!selectRows){
+						top.Notiy.warning("请选择要编辑的项");
+					}else{
+							$.ajax({
+	  							type: 'POST',
+	  							url: "$!basePath/user/officecontroller/"+selectRows.id,
+	  							success: function(data){				
+			   					win_OutWare.windows({href:"$!basePath/user/officecontroller/outware/"+selectRows.id});
+								win_OutWare.windows("open");
+	  						}
+					});
+				}
+			});
+			
+			$("#btnImportExcel").click(function(id) {
+			             $.ajax({
+	  							type: 'POST',
+	  							url: "$!basePath/admin/importExcel/import",
+	  							success: function(data){				
+			   					win_ImportExcel.windows({href:"$!basePath/admin/importExcel/import"});
+								win_ImportExcel.windows("open");  	
+	  						}														
+					});
+				
+			});
+			//---------------------------
+			$("#btnRemove").attr("deleteUrl","$!basePath/user/officecontroller/doDelete");
+			$("#btnRemove").click(function() {
+				DataGridUtil.Delete("$!basePath/user/officecontroller/doDelete","dgProList");
+			});
+			$("#btnExportExcel").click(function(){
+				DataGridUtil.exportExcel($("#dgProList"),"OfficeTable");
+			});
+		}
+		//右键菜单中修改的触发事件
+		function doEditForContentMenu_btnEdit(id){
+			$.ajax({
+	  			type: 'POST',
+	  			url: "$!basePath/user/officecontroller/"+id,
+	  			success: function(data){
+			   			win_Edit.windows({href:"$!basePath/user/officecontroller/edit/"+id});
+						win_Edit.windows("open");   		
+	  				}
+			});
+			
+		}
+		function doSearch(v, n) {
+			doDataGridSearch("dgProList", n, v);
+		}
+	</script>
+	<div data-options="region:'center',border:true">
+		<table id="dgProList"></table>
+	</div>
+	<!--Tools And ContextMenu-->
+	<div id="dgProList-toolbar" style="padding:2px 0;"
+		class="datagrid-toolbar">
+		<table cellpadding="0" cellspacing="0" style="width:100%">
+			<tr>
+				<td style="padding-left:2px">
+				    <a id="btnAdd" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-assets-computer-add',plain:true" style="float: left;">新增</a>
+					<!--<a id="btnEdit" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-assets-computer-edit',plain:true" style="float: left;">修改</a>-->
+					<a id="btnRemove" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-assets-computer-delete',plain:true" style="float: left;">删除</a>
+					<a id="btnIntoware" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-cart-add',plain:true" style="float: left;">入库</a>
+					<a id="btnOutware" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-cart-delete',plain:true" style="float: left;">出库</a>
+					<div class="datagrid-btn-separator"></div>
+					<a id="btnImportExcel"  href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-export-excel',plain:true" style="float: left;">导入Excel</a>
+					<a id="btnExportExcel" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-export-excel',plain:true" style="float: left;">导出Excel</a>					
+				
+				</td>
+				
+				<td style="text-align:right;padding-right:2px">
+					<input id="ss" style="width:240px;" class="easyui-searchbox" data-options="searcher:doSearch,prompt:'请输入查询内容',menu:'#ss_mm'"></input>
+					<div id="ss_mm" style="width:80px;">
+						<div data-options="name:'id',iconCls:'icon-ok'">id</div>
+						<div data-options="name:'goodsname' ,iconCls:'icon-ok'">物品名</div>
+						<div data-options="name:'warehouseamount',iconCls:'icon-ok'">库存数量</div>
+					</div>
+					
+<!-- 					<input id="ss" style="width:240px;" class="easyui-searchbox" data-options="searcher:doSearch,prompt:'请输入查询内容',menu:'#ss_mm'"></input> -->
+<!-- 					<div id="ss_mm" style="width:80px;"> -->
+<!-- 						<div data-options="name:'id',iconCls:'icon-ok'">id</div> -->
+<!-- 						<div data-options="name:'projectname',iconCls:'icon-ok'">项目名称</div> -->
+<!-- 						<div data-options="name:'createprotime',iconCls:'icon-ok'">创建时间</div> -->
+<!-- 					</div> -->
+				</td>
+			</tr>
+		</table>
+	</div>
+	
+<!-- 	<form action="${pageContext.request.contextPath}/servlet/UploadHandleServlet" enctype="multipart/form-data" method="post">
+    上传用户：<input type="text" name="username"><br/>
+    上传文件1：<input type="file" name="file1"><br/>
+    上传文件2：<input type="file" name="file2"><br/>
+    <input type="submit" value="提交">
+  </form>   -->
+	<!-- 右键菜单 -->
+	<div id="dgProList_rowContextMenu" data-options="onClick:rowContentMenuClickHandler" class="easyui-menu" style="width:120px;">
+		<div name="select" data-options="iconCls:'icon-ok'">选中</div>
+		<div name="edit" data-options="iconCls:'icon-datadict-edit'" with="btnEdit">修改</div>
+		<div name="remove" data-options="iconCls:'icon-datadict-delete'" with="btnRemove">删除此参数</div>
+		<div name="removeSelected" data-options="iconCls:'icon-datadict-delete'" with="btnRemove">删除已选中参数</div>
+	</div>
+</body>
+</html>

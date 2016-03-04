@@ -1,0 +1,273 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>res_list.html</title>
+	#style
+</head>
+ <body class="easyui-layout">
+ <script type="text/javascript">
+ 	var winResAdd = new Windows("res_add");
+ 	var winResEdit = new Windows("res_edit");
+ 	var winResSort = new Windows("res_sort");
+ 	var winAssignButton = new Windows("assign_button");
+	$(function(){
+	     initDataGrid();
+	     initWindows();
+	     initToolbar();
+	});
+	function initDataGrid(){
+		$("#tgResList").treegrid({
+				autoRowHeight: false,
+				url:'$!basePath/admin/res/resList',
+				border:false,
+				fit:true,
+				idField:'id',
+				nowrap:false,
+				treeField:'name',
+				animate:true,
+				singleSelect:false,
+				frozenColumns:[[
+	                {field:'ck',checkbox:true},
+	                {title:'序号',field:'id',width:40,sortable:true}
+				]],
+				columns:[[	
+					{field:'name',title:'资源名称',width:220,sortable:true
+						,formatter:function(value,row,index){
+							return highShowSearch($("#tgResList"),"name",value);
+						}
+					},
+					{field:'url',title:'链接地址',width:220,formatter:function(value,row,index){
+							return highShowSearch($("#tgResList"),"url",value);
+						}},
+					{field:'descript',title:'资源描述',width:200,formatter:function(value,row,index){
+							return highShowSearch($("#tgResList"),"descript",value);
+						}},
+					{field:'buttons',title:'按钮权限',width:300,formatter:function(value,row,index){
+							var val = "";
+							for(var i = 0;i< value.length;i++){
+								var btn = value[i];
+								val += "<span class=\""+btn.icon+"\" style=\"padding-left:20px;padding-top:2px;\">"+btn.name+"</span>&nbsp;";
+								if(i>=4 && i/4 == 1){
+									val += "<br/>";
+								}
+							}
+							return val;
+					}},
+					{field:'enabled',title:'状态',width:50,formatter:function(value,row,index){
+						if(value=="0")
+							return "启用";
+						else if(value=="1")
+							return "<span style='color:red;'>禁用<span>";
+					}}
+				]],
+				rownumbers:true,
+				toolbar:'#tgResList-toolbar',
+				onContextMenu:function(e,row){
+					treeGridRowContentMenuShowHandler(e,row,"tgResList","tgResList_rowContextMenu");
+				},
+				onDblClickRow:function(row){
+					winResEdit.windows({href:"$!basePath/admin/res/edit/"+row.id});
+					winResEdit.windows("open");
+				}
+		});
+	}
+	function initWindows(){
+		winResAdd.windows({
+			title:"新增资源",
+			width:370,
+			height:350,
+			modal:true,
+			closed:true,
+			iconCls:'icon-res-add',
+			href:"$!basePath/admin/res/add",
+			onClose:function(){
+				if(winResAdd.getReturnValue()=="true"){
+					$('#tgResList').treegrid("reload");
+				}
+			}
+		});
+		winResEdit.windows({
+			title:"编辑资源",
+			width:370,
+			height:350,
+			modal:true,
+			closed:true,
+			iconCls:'icon-res-edit',
+			href:"$!basePath/admin/res/edit",
+			onClose:function(){
+				var returnValue = JSONObject.parseJSON(winResEdit.getReturnValue());
+				if(returnValue.result == "true"){
+					$('#tgResList').treegrid("reload");
+				}
+			}
+		});
+		winResSort.windows({
+			title:"资源排序",
+			width:550,
+			height:450,
+			modal:true,
+			closed:true,
+			iconCls:'icon-res-sort',
+			href:"$!basePath/admin/res/sort",
+			onClose:function(){
+				if(winResSort.getReturnValue() == "true"){
+					$('#tgResList').treegrid("reload");
+				}
+			}
+		});
+		winAssignButton.windows({
+			title:"分配按钮",
+			width:500,
+			height:400,
+			modal:true,
+			closed:true,
+			maximizable:false,
+			iconCls:'icon-button',
+			href:"$!basePath/admin/res/toAssignButton",
+			onClose:function(){
+				if(winAssignButton.getReturnValue() == "true"){
+					$('#tgResList').treegrid("reload");
+				}
+			}
+		});
+	}
+	function initToolbar(){
+		$("#btnAdd").click(function(){
+			var selectRows = $("#tgResList").treegrid("getSelected");
+			if(selectRows){
+				winResAdd.setParam(selectRows.id);
+			}
+			winResAdd.open();
+		});
+		$("#btnEdit").click(function(id){
+			var selectRows = $("#tgResList").treegrid("getSelected");
+			if(!selectRows){
+				top.Notiy.warning("请选择要编辑的项");
+			}else{
+				winResEdit.windows({href:"$!basePath/admin/res/edit/"+selectRows.id});
+				winResEdit.windows("open");
+			}
+		});
+		$("#btnRemove").attr("deleteUrl","$!basePath/admin/res/doDelete");
+		$("#btnRemove").click(function(){
+			TreeGridUtil.Delete("$!basePath/admin/res/doDelete","tgResList");
+		});
+		$("#btnSort").click(function(){
+			winResSort.open();
+		});
+		$("#btnAssignButton").click(function(){
+			var selectRows = $("#tgResList").treegrid("getSelected");
+			if(!selectRows){
+				top.Notiy.warning("请选择要分配的资源!");
+			}else{
+				var childRows = $("#tgResList").treegrid("getChildren",selectRows.id);
+				if(childRows.length>0){
+					top.Notiy.warning("父级资源无需分配按钮!");
+				}else{
+					winAssignButton.windows({href:"$!basePath/admin/res/assignButton/"+selectRows.id});
+					winAssignButton.windows("open");
+				}
+			}
+		});
+		$("#btnLock").click(function(){
+			lockOrUnlock(0,this);
+		});
+		$("#btnUnLock").click(function(){
+			lockOrUnlock(1,this);
+		});
+	}
+	function lockOrUnlock(type,obj){
+		var selectRows = $("#tgResList").treegrid("getSelections");
+		var tag = "禁用";
+		if(type == 1){
+			tag = "启用";
+		}
+		if(selectRows.length == 0){
+			top.Notiy.warning("请选择要"+tag+"的资源!");
+			return ;
+		}
+		var ids = new Array();
+		$.each(selectRows,function(index,row){
+			ids.push(row.id);
+		});
+		$(obj).linkbutton("loading")
+		$.post("$!basePath/admin/res/lock",{"type":type,"ids":ids.toString()},function(data){
+			$(obj).linkbutton("reset");
+			var r = data.isLocked;
+			if(type == 1)
+				r = data.isUnLocked;
+			if(r){
+				top.Notiy.success(tag+"成功!");
+				$("#tgResList").treegrid("reload");
+			}else{
+				top.Dialog.error(data.error);
+			}
+		},"json");
+	}
+	function reload(){
+		$('#tgResList').treegrid("reload");
+	}
+	//右键菜单中修改的触发事件
+	function doEditForContentMenu_btnEdit(id){
+		winResEdit.windows({href:"$!basePath/admin/res/edit/"+id});
+		winResEdit.windows("open");
+	}
+	function rowContentMenuClickHandler(item){
+		TreeGridContentMenuClickHandler("tgResList",item);
+	}
+	function doSearch(v,n){
+		doTreeGridSearch("tgResList","$!basePath/admin/res/resList",n,v);
+	}
+	//分配按钮右键菜单回调函数
+	function assignButton_onClick(options){
+		winAssignButton.windows({href:"$!basePath/admin/res/assignButton/"+options.rowid});
+		winAssignButton.windows("open");
+	}
+	function addChildRes_onClick(options){
+		winResAdd.setParam(options.rowid);
+		winResAdd.open();
+	}
+ </script>
+    <div data-options="region:'center',border:true">
+		<table id="tgResList"></table>
+    </div>
+    <!-- 工具条 -->
+    <div id="tgResList-toolbar" style="padding:2px 0;" class="datagrid-toolbar">
+   		<table cellpadding="0" cellspacing="0" style="width:100%">
+		<tr>
+			<td style="padding-left:2px">
+				<a id="btnAdd" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-res-add',plain:true" style="float: left;">新增</a>
+				<a id="btnEdit" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-res-edit',plain:true" style="float: left;">修改</a>
+				<a id="btnRemove" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-res-delete',plain:true" style="float: left;">删除</a>
+				<div class="datagrid-btn-separator"></div>
+				<a id="btnUnLock" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-lock',plain:true" style="float: left;">启用</a>
+				<a id="btnLock" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-unlock',plain:true" style="float: left;">禁用</a>
+				<div class="datagrid-btn-separator"></div>
+				<a id="btnSort" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-res-sort',plain:true" style="float: left;">排序</a>
+				<a id="btnAssignButton" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-button-add',plain:true" style="float: left;">分配按钮</a>
+			</td>
+			<td style="text-align:right;padding-right:2px">
+				<input id="ss" style="width:240px;" class="easyui-searchbox" data-options="searcher:doSearch,prompt:'请输入查询内容',menu:'#ss_mm'"></input>
+				<div id="ss_mm" style="width:80px;">
+					<div data-options="name:'id'">序号</div>
+					<div data-options="name:'name'">资源名称</div>
+					<div data-options="name:'url'">资源连接</div>
+					<div data-options="name:'descript'">资源描述</div>
+				</div>
+			</td>
+		</tr>
+	</table>
+    </div>
+	</div>
+	<!-- 右键菜单 -->
+	<div id="tgResList_rowContextMenu" data-options="onClick:rowContentMenuClickHandler" class="easyui-menu" style="width:120px;">
+		<div name="select" data-options="iconCls:'icon-ok'">选中</div>
+		<div name="edit" data-options="iconCls:'icon-res-edit'" with="btnEdit">修改</div>
+		<div name="addChildRes" data-options="iconCls:'icon-res-add'" with="btnAdd">新增子资源</div>
+		<div name="assignButton" data-options="iconCls:'icon-button-add'" with="btnAssignButton">分配按钮</div>
+		<div name="remove" data-options="iconCls:'icon-res-delete'" with="btnRemove">删除此资源</div>
+		<div name="removeSelected" data-options="iconCls:'icon-res-delete'" with="btnRemove">删除选中资源</div>
+	</div>
+  </body>
+</html>

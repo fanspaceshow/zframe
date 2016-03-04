@@ -1,0 +1,25 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>hello</title>
+#style
+</head>
+<body class="easyui-layout">   
+<script type="text/javascript">
+var win_ImportExcel = new Windows("officedepot_import");
+
+</script>
+
+   <div>
+        <form  enctype='multipart/form-data'  method="post" action="$!basePath/admin/importExcel/importdo" target="aa">
+            <input type="file" name="excelFile" />
+            <button id="impoBtn">Excel文件导入</button>
+        </form>
+    </div>
+  <iframe name="aa" src="" style="display:none"></iframe>
+ 
+
+  
+</body>
+</html>
